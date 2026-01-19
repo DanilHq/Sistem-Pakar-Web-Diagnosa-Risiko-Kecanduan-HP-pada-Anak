@@ -1,0 +1,141 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║    SISTEM PAKAR - DIAGNOSA KECANDUAN HP PADA ANAK                       ║
+║    Forward Chaining Expert System                                       ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+🚀 QUICK START - IKUTI LANGKAH INI:
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ STEP 1: Install Build Tools (SEKALI SAJA - 5-10 menit)                  │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  1. Buka PowerShell sebagai ADMINISTRATOR
+     (Klik kanan > Run as Administrator)
+
+  2. Jalankan command ini:
+
+     cd "C:\Sistem Pakar Web — Diagnosa Risiko Kecanduan HP pada Anak"
+     .\install-build-tools.ps1
+
+  3. Tunggu sampai selesai (5-10 menit)
+
+  4. Tutup PowerShell Admin
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ STEP 2: Setup & Run Aplikasi                                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  1. Buka PowerShell BARU (tidak perlu admin)
+
+  2. Jalankan command ini:
+
+     cd "C:\Sistem Pakar Web — Diagnosa Risiko Kecanduan HP pada Anak"
+     .\setup-and-run.ps1
+
+  3. Script akan otomatis:
+     ✅ Install backend dependencies
+     ✅ Setup database SQLite
+     ✅ Seed data (15 symptoms, 16 rules)
+     ✅ Install frontend dependencies
+     ✅ Start servers (2 windows baru)
+
+  4. Tunggu 30-60 detik, lalu buka browser:
+
+     http://localhost:5173
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ DEFAULT LOGIN                                                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  ADMIN:
+    Email    : admin@example.com
+    Password : Admin123!
+
+  USER:
+    Email    : user@example.com
+    Password : User123!
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ DOKUMENTASI                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  📄 QUICK-START.md  - Panduan cepat (baca ini dulu!)
+  📄 SETUP.md        - Panduan detail + troubleshooting
+  📄 README.md       - Overview & features lengkap
+  📄 openapi.yaml    - API documentation
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  ❌ Script tidak bisa dijalankan?
+     → Buka QUICK-START.md, ikuti "LANGKAH MANUAL"
+
+  ❌ Error saat npm install?
+     → Pastikan build tools sudah terinstall (STEP 1)
+     → Cek SETUP.md untuk alternatif solusi
+
+  ❌ Port sudah dipakai?
+     → Kill process: netstat -ano | findstr :5000
+     → Atau lihat QUICK-START.md bagian Troubleshooting
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ FITUR UTAMA                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  ✅ Diagnosa interaktif (15 pertanyaan YA/TIDAK)
+  ✅ Forward Chaining Engine (16 rules, prioritas)
+  ✅ Trace transparan (lihat aturan yang terpenuhi)
+  ✅ Export PDF hasil diagnosa
+  ✅ Riwayat diagnosa (untuk user login)
+  ✅ Admin panel (CRUD symptoms, rules, articles)
+  ✅ Statistik & dashboard admin
+  ✅ Artikel edukasi
+  ✅ Mobile responsive
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ TECH STACK                                                               │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  Backend:  Node.js + Express + TypeScript + SQLite
+  Frontend: React 18 + Vite + Tailwind CSS + TypeScript
+  Auth:     JWT + bcrypt
+  PDF:      jsPDF
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ KONTRIBUTOR                                                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  Built with Claude Code
+  For educational & health awareness purposes
+  License: MIT
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+🎯 NEXT STEPS:
+
+  1. Install build tools (jika belum)
+  2. Jalankan setup-and-run.ps1
+  3. Buka http://localhost:5173
+  4. Login sebagai admin untuk explore semua fitur
+  5. Baca dokumentasi untuk development lebih lanjut
+
+💡 TIPS:
+  - Gunakan admin account untuk akses penuh
+  - Coba diagnosa tanpa login (anonymous) juga bisa
+  - Export hasil diagnosa ke PDF
+  - Lihat trace untuk understand forward chaining
+
+Happy Coding! 🚀
+
+═══════════════════════════════════════════════════════════════════════════

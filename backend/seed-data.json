@@ -1,0 +1,299 @@
+{
+  "symptoms": [
+    {
+      "code": "G01",
+      "text": "Anak menggunakan HP lebih dari 4 jam per hari",
+      "help_text": "Penggunaan HP yang berlebihan dalam durasi waktu yang panjang",
+      "active": true
+    },
+    {
+      "code": "G02",
+      "text": "Anak sulit tidur atau begadang karena bermain HP",
+      "help_text": "Gangguan pola tidur akibat penggunaan HP di malam hari",
+      "active": true
+    },
+    {
+      "code": "G03",
+      "text": "Anak menjadi mudah marah atau tantrum saat HP-nya diambil",
+      "help_text": "Reaksi emosional negatif ketika akses HP dibatasi",
+      "active": true
+    },
+    {
+      "code": "G04",
+      "text": "Anak mengabaikan tugas sekolah atau PR karena bermain HP",
+      "help_text": "Penurunan fokus pada kewajiban akademik",
+      "active": true
+    },
+    {
+      "code": "G05",
+      "text": "Anak lebih suka bermain HP daripada berinteraksi dengan teman atau keluarga",
+      "help_text": "Isolasi sosial dan mengurangi interaksi langsung",
+      "active": true
+    },
+    {
+      "code": "G06",
+      "text": "Anak mengeluh sakit kepala atau mata lelah setelah menggunakan HP",
+      "help_text": "Gejala fisik akibat paparan layar yang berlebihan",
+      "active": true
+    },
+    {
+      "code": "G07",
+      "text": "Anak sering berbohong tentang durasi penggunaan HP-nya",
+      "help_text": "Perilaku menyembunyikan atau mengecilkan waktu penggunaan HP",
+      "active": true
+    },
+    {
+      "code": "G08",
+      "text": "Anak meminta HP segera setelah bangun tidur",
+      "help_text": "Keinginan kuat untuk mengakses HP di awal hari",
+      "active": true
+    },
+    {
+      "code": "G09",
+      "text": "Anak kehilangan minat pada hobi atau aktivitas lain yang dulu disukainya",
+      "help_text": "Penurunan ketertarikan pada aktivitas non-digital",
+      "active": true
+    },
+    {
+      "code": "G10",
+      "text": "Anak menggunakan HP saat makan atau di kamar mandi",
+      "help_text": "Penggunaan HP di situasi yang tidak sesuai",
+      "active": true
+    },
+    {
+      "code": "G11",
+      "text": "Prestasi akademik anak menurun sejak sering menggunakan HP",
+      "help_text": "Penurunan nilai atau performa di sekolah",
+      "active": true
+    },
+    {
+      "code": "G12",
+      "text": "Anak menjadi kurang aktif secara fisik atau jarang berolahraga",
+      "help_text": "Penurunan aktivitas fisik dan gaya hidup sedentary",
+      "active": true
+    },
+    {
+      "code": "G13",
+      "text": "Anak terlihat cemas atau gelisah saat tidak bisa mengakses HP",
+      "help_text": "Gejala kecemasan saat terpisah dari HP",
+      "active": true
+    },
+    {
+      "code": "G14",
+      "text": "Anak menggunakan HP sebagai pelarian dari masalah atau perasaan negatif",
+      "help_text": "Penggunaan HP sebagai mekanisme coping yang tidak sehat",
+      "active": true
+    },
+    {
+      "code": "G15",
+      "text": "Anak mengakses konten yang tidak sesuai usia (game violent, media sosial berlebihan)",
+      "help_text": "Paparan konten yang tidak pantas untuk usianya",
+      "active": true
+    }
+  ],
+  "rules": [
+    {
+      "code": "R01",
+      "conditions": ["G01", "G03", "G04", "G05", "G07", "G11", "G13"],
+      "result": "K04",
+      "priority": 1,
+      "description": "Kecanduan Berat - Anak menunjukkan 7+ gejala kritis termasuk penggunaan berlebihan, gangguan emosi kuat, penurunan prestasi, isolasi sosial, dan perilaku tidak jujur",
+      "recommendation": "SEGERA konsultasi dengan psikolog anak atau profesional kesehatan mental. Anak memerlukan intervensi terstruktur dengan terapi perilaku kognitif (CBT), detoksifikasi digital terstruktur, dan keterlibatan intensif orang tua. Pertimbangkan konseling keluarga dan program rehabilitasi digital.",
+      "active": true
+    },
+    {
+      "code": "R02",
+      "conditions": ["G01", "G02", "G03", "G06", "G09", "G12"],
+      "result": "K04",
+      "priority": 2,
+      "description": "Kecanduan Berat - Kombinasi gejala fisik (gangguan tidur, keluhan kesehatan) dan psikologis (kehilangan minat, gangguan emosi, kurang aktivitas fisik)",
+      "recommendation": "Konsultasi mendesak dengan dokter anak dan psikolog. Diperlukan pemeriksaan kesehatan komprehensif (mata, postur, tidur) dan intervensi psikologis. Buat jadwal digital detox bertahap dengan alternatif aktivitas fisik yang menarik.",
+      "active": true
+    },
+    {
+      "code": "R03",
+      "conditions": ["G03", "G05", "G07", "G13", "G14"],
+      "result": "K03",
+      "priority": 3,
+      "description": "Kecanduan Sedang - Pola perilaku emosional dan sosial yang bermasalah: gangguan emosi saat HP diambil, isolasi sosial, tidak jujur, cemas tanpa HP, dan penggunaan sebagai pelarian",
+      "recommendation": "Konsultasi dengan psikolog atau konselor sekolah. Terapkan aturan penggunaan HP yang konsisten dengan konsekuensi jelas. Libatkan anak dalam aktivitas sosial terstruktur (olahraga tim, klub, kegiatan keluarga). Bangun komunikasi terbuka tentang perasaan dan stres.",
+      "active": true
+    },
+    {
+      "code": "R04",
+      "conditions": ["G01", "G04", "G11"],
+      "result": "K03",
+      "priority": 4,
+      "description": "Kecanduan Sedang - Fokus pada dampak akademik: penggunaan berlebihan, mengabaikan tugas, dan penurunan prestasi",
+      "recommendation": "Konsultasi dengan guru dan orang tua untuk membuat strategi belajar. Batasi waktu HP di hari sekolah (maksimal 2 jam). Buat zona bebas HP saat belajar. Gunakan aplikasi parental control untuk membatasi akses saat jam belajar. Berikan reward untuk pencapaian akademik.",
+      "active": true
+    },
+    {
+      "code": "R05",
+      "conditions": ["G02", "G06", "G10", "G12"],
+      "result": "K03",
+      "priority": 5,
+      "description": "Kecanduan Sedang - Fokus pada dampak kesehatan fisik: gangguan tidur, keluhan fisik, penggunaan di tempat tidak tepat, kurang aktivitas",
+      "recommendation": "Konsultasi dengan dokter anak untuk cek kesehatan mata dan postur. Terapkan aturan: tidak ada HP 1 jam sebelum tidur, tidak di kamar mandi/saat makan. Jadwalkan aktivitas fisik rutin minimal 30 menit/hari. Gunakan fitur screen time reminder dan filter blue light.",
+      "active": true
+    },
+    {
+      "code": "R06",
+      "conditions": ["G01", "G08", "G10"],
+      "result": "K02",
+      "priority": 6,
+      "description": "Kecanduan Ringan - Pola penggunaan yang mulai bermasalah: durasi berlebihan, kebiasaan langsung cek HP saat bangun, dan penggunaan di situasi tidak tepat",
+      "recommendation": "Mulai terapkan batasan waktu layar (maksimal 2-3 jam/hari). Buat aturan: HP tidak di kamar tidur saat malam, tidak saat makan bersama. Diskusikan dengan anak tentang penggunaan HP yang sehat. Ajak anak membuat jadwal harian yang seimbang.",
+      "active": true
+    },
+    {
+      "code": "R07",
+      "conditions": ["G03", "G07", "G13"],
+      "result": "K02",
+      "priority": 7,
+      "description": "Kecanduan Ringan - Tanda awal ketergantungan emosional: marah saat HP diambil, berbohong tentang penggunaan, cemas tanpa HP",
+      "recommendation": "Komunikasi terbuka dengan anak tentang perasaannya. Terapkan aturan yang konsisten dengan penjelasan alasan yang jelas. Ajari anak keterampilan regulasi emosi. Cari tahu apa yang membuat HP begitu penting (game tertentu, teman online, konten) dan cari alternatif sehat.",
+      "active": true
+    },
+    {
+      "code": "R08",
+      "conditions": ["G04", "G05", "G09"],
+      "result": "K02",
+      "priority": 8,
+      "description": "Kecanduan Ringan - Dampak awal pada kehidupan sosial dan minat: mengabaikan tugas, lebih suka HP daripada interaksi, kehilangan minat hobi lama",
+      "recommendation": "Dorong anak ikut kegiatan ekstrakurikuler atau hobi baru yang menarik. Jadwalkan quality time keluarga tanpa gadget. Ajak teman-teman anak untuk aktivitas outdoor. Buat challenge atau kompetisi keluarga untuk mengurangi screen time dengan reward yang menarik.",
+      "active": true
+    },
+    {
+      "code": "R09",
+      "conditions": ["G01", "G02", "G06"],
+      "result": "K02",
+      "priority": 9,
+      "description": "Kecanduan Ringan - Fokus pada dampak fisik awal: penggunaan berlebihan, gangguan tidur, keluhan kesehatan ringan",
+      "recommendation": "Terapkan batasan waktu layar dan curfew HP (tidak setelah jam 8 malam). Ajari anak tentang dampak blue light dan pentingnya tidur. Pastikan pencahayaan baik saat menggunakan HP. Dorong aktivitas fisik dan outdoor time minimal 1 jam/hari.",
+      "active": true
+    },
+    {
+      "code": "R10",
+      "conditions": ["G14", "G15"],
+      "result": "K02",
+      "priority": 10,
+      "description": "Kecanduan Ringan - Pola penggunaan yang perlu perhatian: HP sebagai pelarian dan akses konten tidak sesuai usia",
+      "recommendation": "Pasang parental control dan filter konten. Diskusikan dengan anak tentang keamanan digital dan konten yang pantas. Gali apa masalah yang membuat anak butuh pelarian (stres sekolah, masalah sosial) dan bantu carikan solusi. Cari support dari guru atau konselor sekolah jika perlu.",
+      "active": true
+    },
+    {
+      "code": "R11",
+      "conditions": ["G11", "G12"],
+      "result": "K02",
+      "priority": 11,
+      "description": "Kecanduan Ringan - Dampak pada performa dan kesehatan: penurunan prestasi akademik dan aktivitas fisik",
+      "recommendation": "Buat jadwal belajar dan olahraga yang terstruktur. Batasi HP saat jam belajar (2 jam setelah pulang sekolah). Daftarkan anak di kegiatan olahraga yang ia sukai. Monitor perkembangan akademik dan berikan dukungan untuk tugas-tugas sekolah.",
+      "active": true
+    },
+    {
+      "code": "R12",
+      "conditions": ["G01", "G05"],
+      "result": "K02",
+      "priority": 12,
+      "description": "Kecanduan Ringan - Penggunaan berlebihan yang mulai mempengaruhi interaksi sosial",
+      "recommendation": "Kurangi durasi penggunaan HP secara bertahap (target 2 jam/hari). Jadwalkan aktivitas keluarga dan pertemuan dengan teman secara rutin. Buat aturan device-free zones (ruang makan, ruang keluarga saat quality time). Ajak anak bermain board games atau aktivitas kreatif bersama.",
+      "active": true
+    },
+    {
+      "code": "R13",
+      "conditions": ["G02", "G08"],
+      "result": "K02",
+      "priority": 13,
+      "description": "Kecanduan Ringan - Kebiasaan penggunaan HP yang mengganggu pola tidur dan rutinitas pagi",
+      "recommendation": "Tetapkan aturan: HP di charge di luar kamar tidur. Buat rutinitas pagi yang sehat (sarapan, persiapan sekolah) sebelum boleh akses HP. Ajari anak tentang sleep hygiene dan pentingnya tidur berkualitas untuk kesehatan dan prestasi.",
+      "active": true
+    },
+    {
+      "code": "R14",
+      "conditions": ["G01"],
+      "result": "K02",
+      "priority": 14,
+      "description": "Kecanduan Ringan - Durasi penggunaan HP yang berlebihan (>4 jam/hari)",
+      "recommendation": "Mulai tracking dan batasi waktu layar menggunakan fitur screen time di HP. Target: kurangi 30 menit setiap minggu sampai mencapai 2 jam/hari. Diskusikan dengan anak untuk membuat kesepakatan bersama tentang penggunaan HP yang sehat.",
+      "active": true
+    },
+    {
+      "code": "R15",
+      "conditions": ["G03"],
+      "result": "K02",
+      "priority": 15,
+      "description": "Kecanduan Ringan - Reaksi emosional negatif saat HP dibatasi",
+      "recommendation": "Terapkan aturan secara konsisten dan bertahap, jangan langsung drastis. Jelaskan alasan aturan dengan bahasa yang anak pahami. Berikan pilihan dan kontrol pada anak (contoh: pilih sendiri 2 jam kapan boleh main HP). Ajari anak cara mengelola emosi dan frustrasi.",
+      "active": true
+    },
+    {
+      "code": "R16",
+      "conditions": [],
+      "result": "K01",
+      "priority": 16,
+      "description": "Normal - Tidak ada gejala kecanduan HP yang signifikan. Anak menunjukkan pola penggunaan HP yang sehat dan seimbang",
+      "recommendation": "Pertahankan pola penggunaan HP yang sehat ini. Tetap lakukan monitoring secara berkala. Terus komunikasikan pentingnya digital wellness. Berikan pujian pada anak untuk kebiasaan baik yang sudah terbentuk. Jadilah role model penggunaan teknologi yang sehat.",
+      "active": true
+    }
+  ],
+  "articles": [
+    {
+      "title": "Bahaya Kecanduan HP pada Anak: Dampak Fisik dan Mental",
+      "slug": "bahaya-kecanduan-hp-anak",
+      "excerpt": "Penggunaan HP berlebihan pada anak dapat menyebabkan berbagai masalah kesehatan fisik dan mental. Kenali tanda-tandanya.",
+      "content": "Kecanduan HP pada anak adalah masalah serius yang dapat mempengaruhi perkembangan fisik, mental, dan sosial anak. Dampak fisik meliputi gangguan tidur, masalah penglihatan, postur tubuh yang buruk, dan kurangnya aktivitas fisik...",
+      "category": "Edukasi",
+      "author": "Tim Kesehatan",
+      "published": true
+    },
+    {
+      "title": "Tips Membatasi Screen Time Anak dengan Efektif",
+      "slug": "tips-batasi-screen-time-anak",
+      "excerpt": "Strategi praktis untuk orang tua dalam membatasi waktu layar anak tanpa konflik.",
+      "content": "Membatasi screen time anak memerlukan pendekatan yang konsisten dan penuh empati. Berikut adalah beberapa strategi yang terbukti efektif...",
+      "category": "Tips Parenting",
+      "author": "Tim Kesehatan",
+      "published": true
+    },
+    {
+      "title": "Aktivitas Alternatif untuk Mengganti Waktu Bermain HP",
+      "slug": "aktivitas-alternatif-ganti-hp",
+      "excerpt": "Ide-ide aktivitas menarik yang dapat mengalihkan perhatian anak dari HP.",
+      "content": "Salah satu kunci mengurangi penggunaan HP adalah menyediakan alternatif yang menarik. Berikut adalah berbagai aktivitas yang dapat dilakukan anak...",
+      "category": "Tips Parenting",
+      "author": "Tim Kesehatan",
+      "published": true
+    }
+  ],
+  "categories": [
+    {
+      "code": "K01",
+      "name": "Normal",
+      "level": 0,
+      "color": "#10b981",
+      "description": "Tidak ada indikasi kecanduan HP. Penggunaan HP anak masih dalam batas wajar dan sehat."
+    },
+    {
+      "code": "K02",
+      "name": "Kecanduan Ringan",
+      "level": 1,
+      "color": "#f59e0b",
+      "description": "Terdapat beberapa gejala awal kecanduan HP yang perlu diwaspadai. Intervensi dini diperlukan."
+    },
+    {
+      "code": "K03",
+      "name": "Kecanduan Sedang",
+      "level": 2,
+      "color": "#f97316",
+      "description": "Anak menunjukkan beberapa gejala kecanduan yang mulai berdampak pada kehidupan sehari-hari. Perlu tindakan korektif segera."
+    },
+    {
+      "code": "K04",
+      "name": "Kecanduan Berat",
+      "level": 3,
+      "color": "#dc2626",
+      "description": "Anak menunjukkan banyak gejala kecanduan HP yang serius. Konsultasi dengan profesional sangat disarankan."
+    }
+  ]
+}

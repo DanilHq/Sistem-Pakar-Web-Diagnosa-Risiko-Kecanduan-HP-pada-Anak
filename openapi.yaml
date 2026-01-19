@@ -1,0 +1,501 @@
+openapi: 3.0.3
+info:
+  title: Sistem Pakar - Diagnosa Kecanduan HP API
+  description: |
+    REST API untuk sistem pakar diagnosa risiko kecanduan HP pada anak menggunakan Forward Chaining.
+
+    **Base URL**: `http://localhost:5000/api`
+
+    **Authentication**: JWT Bearer Token (untuk endpoint yang memerlukan autentikasi)
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:5000/api
+    description: Development server
+  - url: https://api.example.com/api
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: Diagnosis
+    description: Diagnosis and forward chaining endpoints
+  - name: Symptoms
+    description: Symptoms management endpoints
+  - name: Rules
+    description: Rules management endpoints
+  - name: Articles
+    description: Articles management endpoints
+  - name: Admin
+    description: Admin-only endpoints
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        created_at:
+          type: string
+          format: date-time
+
+    Symptom:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+          example: G01
+        text:
+          type: string
+        help_text:
+          type: string
+        active:
+          type: boolean
+
+    Rule:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+          example: R01
+        conditions:
+          type: array
+          items:
+            type: string
+        result:
+          type: string
+          example: K04
+        priority:
+          type: integer
+        description:
+          type: string
+        recommendation:
+          type: string
+        active:
+          type: boolean
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        level:
+          type: integer
+        color:
+          type: string
+        description:
+          type: string
+
+    DiagnosisRequest:
+      type: object
+      required:
+        - selected_symptoms
+      properties:
+        user_id:
+          type: integer
+        selected_symptoms:
+          type: array
+          items:
+            type: string
+          example: ["G01", "G03", "G05"]
+
+    DiagnosisResponse:
+      type: object
+      properties:
+        diagnosis_id:
+          type: integer
+        result_code:
+          type: string
+        matched_rule_code:
+          type: string
+        matched_description:
+          type: string
+        recommendation:
+          type: string
+        trace:
+          type: array
+          items:
+            type: object
+            properties:
+              rule_code:
+                type: string
+              conditions:
+                type: array
+                items:
+                  type: string
+              matched:
+                type: boolean
+              priority:
+                type: integer
+        active_symptoms:
+          type: array
+          items:
+            type: string
+        category:
+          $ref: '#/components/schemas/Category'
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /diagnose:
+    post:
+      tags:
+        - Diagnosis
+      summary: Run diagnosis with forward chaining
+      description: |
+        Melakukan diagnosa dengan metode forward chaining berdasarkan gejala yang dipilih.
+        Dapat digunakan tanpa autentikasi (anonymous) atau dengan autentikasi untuk menyimpan riwayat.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiagnosisRequest'
+      responses:
+        '200':
+          description: Diagnosis result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosisResponse'
+
+  /diagnose/history:
+    get:
+      tags:
+        - Diagnosis
+      summary: Get user diagnosis history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Diagnosis history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    items:
+                      type: object
+
+  /diagnose/{id}:
+    get:
+      tags:
+        - Diagnosis
+      summary: Get diagnosis by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Diagnosis details
+
+  /symptoms:
+    get:
+      tags:
+        - Symptoms
+      summary: Get all active symptoms
+      description: Public endpoint - dapat diakses tanpa autentikasi
+      responses:
+        '200':
+          description: List of active symptoms
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  symptoms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Symptom'
+    post:
+      tags:
+        - Symptoms
+      summary: Create new symptom (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Symptom'
+      responses:
+        '201':
+          description: Symptom created
+
+  /symptoms/all:
+    get:
+      tags:
+        - Symptoms
+      summary: Get all symptoms including inactive (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all symptoms
+
+  /symptoms/{id}:
+    put:
+      tags:
+        - Symptoms
+      summary: Update symptom (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Symptom'
+      responses:
+        '200':
+          description: Symptom updated
+    delete:
+      tags:
+        - Symptoms
+      summary: Delete symptom (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Symptom deleted
+
+  /rules:
+    get:
+      tags:
+        - Rules
+      summary: Get all rules (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of rules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Rule'
+    post:
+      tags:
+        - Rules
+      summary: Create new rule (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Rule'
+      responses:
+        '201':
+          description: Rule created
+
+  /articles:
+    get:
+      tags:
+        - Articles
+      summary: Get all published articles
+      description: Public endpoint
+      responses:
+        '200':
+          description: List of published articles
+
+  /articles/{slug}:
+    get:
+      tags:
+        - Articles
+      summary: Get article by slug
+      description: Public endpoint
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Article details
+
+  /admin/statistics:
+    get:
+      tags:
+        - Admin
+      summary: Get system statistics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: System statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: object
+                  diagnoses:
+                    type: object
+                  symptoms:
+                    type: object
+                  rules:
+                    type: object
+
+  /admin/diagnoses:
+    get:
+      tags:
+        - Admin
+      summary: Get all diagnoses with pagination
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated diagnoses list
