@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -37,6 +38,13 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  const initAuth = useAuthStore((state) => state.initAuth);
+
+  // Initialize auth state from localStorage on app start
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
   return (
     <Router>
       <div className="flex flex-col min-h-screen">

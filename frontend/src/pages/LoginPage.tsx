@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { useAuthStore } from '../store/authStore';
-import { LogIn, Mail, Lock, AlertCircle, Loader } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, Loader, Info } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const setAuth = useAuthStore((state) => state.setAuth);
 
   const [formData, setFormData] = useState({
@@ -14,6 +15,14 @@ export default function LoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
+
+  useEffect(() => {
+    // Check if there's a message from navigation state
+    if (location.state?.message) {
+      setInfoMessage(location.state.message);
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

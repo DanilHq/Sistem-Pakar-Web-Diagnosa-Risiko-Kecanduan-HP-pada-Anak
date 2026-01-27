@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Check, AlertCircle, Loader } from 'lucide-re
 
 export default function DiagnosePage() {
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
+  const { user } = useAuthStore();
 
   const [symptoms, setSymptoms] = useState<Symptom[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -16,7 +16,7 @@ export default function DiagnosePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+useEffect(() => {
     loadSymptoms();
   }, []);
 

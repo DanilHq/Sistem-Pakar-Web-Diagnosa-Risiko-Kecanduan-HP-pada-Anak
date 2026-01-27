@@ -35,9 +35,11 @@ export default function Navbar() {
             <Link to="/" className="text-gray-700 hover:text-primary-600 transition text-sm font-medium">
               Beranda
             </Link>
-            <Link to="/diagnose" className="text-gray-700 hover:text-primary-600 transition text-sm font-medium">
-              Tes
-            </Link>
+            {isAuthenticated && (
+              <Link to="/diagnose" className="text-gray-700 hover:text-primary-600 transition text-sm font-medium">
+                Tes
+              </Link>
+            )}
             <Link to="/articles" className="text-gray-700 hover:text-primary-600 transition text-sm font-medium">
               Artikel
             </Link>
@@ -107,19 +109,28 @@ export default function Navbar() {
               >
                 Beranda
               </Link>
+              {isAuthenticated && (
               <Link
                 to="/diagnose"
                 onClick={closeMobileMenu}
                 className="text-gray-700 hover:text-primary-600 transition text-sm"
-              >
-                Tes
-              </Link>
+                >
+                  Tes
+                </Link>
+              )}
               <Link
                 to="/articles"
                 onClick={closeMobileMenu}
                 className="text-gray-700 hover:text-primary-600 transition text-sm"
               >
-                Artikel
+                Artikel 
+              </Link>
+              <Link
+                to="/about"
+                onClick={closeMobileMenu}
+                className="text-gray-700 hover:text-primary-600 transition text-sm"
+              >
+                Tentang
               </Link>
               <Link
                 to="/about"
