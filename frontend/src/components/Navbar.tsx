@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { Menu, X, LogOut, User, Shield } from 'lucide-react';
+import { Menu, X, LogOut, User, History, Stethoscope } from 'lucide-react';
 import { useState } from 'react';
 import Logo from './Logo';
 
@@ -19,6 +19,11 @@ export default function Navbar() {
     setMobileMenuOpen(false);
   };
 
+  // Jika admin, tidak tampilkan navbar biasa (admin punya layout sendiri)
+  if (isAuthenticated && user?.role === 'admin') {
+    return null;
+  }
+
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4">
@@ -35,11 +40,14 @@ export default function Navbar() {
             <Link to="/" className="text-gray-700 hover:text-primary-600 transition text-sm font-medium">
               Beranda
             </Link>
+            
             {isAuthenticated && (
-              <Link to="/diagnose" className="text-gray-700 hover:text-primary-600 transition text-sm font-medium">
-                Tes
+              <Link to="/diagnose" className="text-gray-700 hover:text-primary-600 transition text-sm font-medium flex items-center gap-1">
+                <Stethoscope className="w-4 h-4" />
+                Mulai Diagnosa
               </Link>
             )}
+            
             <Link to="/articles" className="text-gray-700 hover:text-primary-600 transition text-sm font-medium">
               Artikel
             </Link>
@@ -49,23 +57,16 @@ export default function Navbar() {
 
             {isAuthenticated ? (
               <>
-                <Link to="/history" className="text-gray-700 hover:text-primary-600 transition text-sm font-medium">
+                <Link to="/history" className="text-gray-700 hover:text-primary-600 transition text-sm font-medium flex items-center gap-1">
+                  <History className="w-4 h-4" />
                   Riwayat
                 </Link>
 
-                {user?.role === 'admin' && (
-                  <Link
-                    to="/admin"
-                    className="flex items-center gap-1 text-primary-600 hover:text-primary-700 transition text-sm font-medium"
-                  >
-                    <Shield className="w-3.5 h-3.5" />
-                    <span>Admin</span>
-                  </Link>
-                )}
-
                 <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
                   <div className="flex items-center gap-1.5 text-gray-700">
-                    <User className="w-3.5 h-3.5" />
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-primary-600" />
+                    </div>
                     <span className="text-xs font-medium">{user?.name}</span>
                   </div>
                   <button
@@ -109,15 +110,18 @@ export default function Navbar() {
               >
                 Beranda
               </Link>
+              
               {isAuthenticated && (
-              <Link
-                to="/diagnose"
-                onClick={closeMobileMenu}
-                className="text-gray-700 hover:text-primary-600 transition text-sm"
+                <Link
+                  to="/diagnose"
+                  onClick={closeMobileMenu}
+                  className="text-gray-700 hover:text-primary-600 transition text-sm flex items-center gap-2"
                 >
-                  Tes
+                  <Stethoscope className="w-4 h-4" />
+                  Mulai Diagnosa
                 </Link>
               )}
+              
               <Link
                 to="/articles"
                 onClick={closeMobileMenu}
@@ -132,43 +136,31 @@ export default function Navbar() {
               >
                 Tentang
               </Link>
-              <Link
-                to="/about"
-                onClick={closeMobileMenu}
-                className="text-gray-700 hover:text-primary-600 transition text-sm"
-              >
-                Tentang
-              </Link>
 
               {isAuthenticated ? (
                 <>
                   <Link
                     to="/history"
                     onClick={closeMobileMenu}
-                    className="text-gray-700 hover:text-primary-600 transition text-sm"
+                    className="text-gray-700 hover:text-primary-600 transition text-sm flex items-center gap-2"
                   >
-                    Riwayat
+                    <History className="w-4 h-4" />
+                    Riwayat Diagnosa
                   </Link>
 
-                  {user?.role === 'admin' && (
-                    <Link
-                      to="/admin"
-                      onClick={closeMobileMenu}
-                      className="flex items-center gap-1 text-primary-600 hover:text-primary-700 transition text-sm"
-                    >
-                      <Shield className="w-4 h-4" />
-                      <span>Admin</span>
-                    </Link>
-                  )}
-
                   <div className="pt-3 border-t border-gray-100 mt-1">
-                    <div className="flex items-center gap-1.5 text-gray-700 mb-3">
-                      <User className="w-4 h-4" />
-                      <span className="text-xs">{user?.name}</span>
+                    <div className="flex items-center gap-2 text-gray-700 mb-3">
+                      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-primary-600" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium">{user?.name}</span>
+                        <p className="text-xs text-gray-500">{user?.email}</p>
+                      </div>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-1 text-red-600 hover:text-red-700 transition text-sm"
+                      className="flex items-center gap-2 text-red-600 hover:text-red-700 transition text-sm"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Keluar</span>
@@ -184,7 +176,11 @@ export default function Navbar() {
                   >
                     Masuk
                   </Link>
-                  <Link to="/register" onClick={closeMobileMenu} className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition inline-block text-center">
+                  <Link 
+                    to="/register" 
+                    onClick={closeMobileMenu} 
+                    className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition inline-block text-center"
+                  >
                     Daftar
                   </Link>
                 </div>
