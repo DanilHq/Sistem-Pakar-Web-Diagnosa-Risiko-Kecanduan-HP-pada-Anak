@@ -3,12 +3,14 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import db from './database';
 import authRoutes from './routes/auth';
 import diagnoseRoutes from './routes/diagnose';
 import symptomsRoutes from './routes/symptoms';
 import rulesRoutes from './routes/rules';
 import articlesRoutes from './routes/articles';
 import adminRoutes from './routes/admin';
+import aboutRoutes from './routes/about';
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +53,7 @@ app.use('/api/symptoms', symptomsRoutes);
 app.use('/api/rules', rulesRoutes);
 app.use('/api/articles', articlesRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/about', aboutRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -65,9 +68,14 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`
+// Initialize database and start server
+async function startServer() {
+  try {
+    await db.init();
+    console.log('Database initialized');
+    
+    app.listen(PORT, () => {
+      console.log(`
 ╔════════════════════════════════════════════════════════════════╗
 ║  🏥 Sistem Pakar - Diagnosa Kecanduan HP pada Anak            ║
 ║  Server running on http://localhost:${PORT}                     ║
@@ -84,14 +92,24 @@ app.listen(PORT, () => {
 ║  GET  /api/diagnose/history - Get diagnosis history           ║
 ║  GET  /api/symptoms        - Get all symptoms                 ║
 ║  GET  /api/articles        - Get all articles                 ║
+║  GET  /api/about           - Get about content                ║
 ║                                                                ║
 ║  🔐 Admin endpoints (requires authentication):                 ║
 ║  GET  /api/admin/statistics - System statistics               ║
+║  CRUD /api/admin/users/*   - Manage users                     ║
 ║  CRUD /api/symptoms/*      - Manage symptoms                  ║
 ║  CRUD /api/rules/*         - Manage rules                     ║
 ║  CRUD /api/articles/*      - Manage articles                  ║
+║  PUT  /api/about           - Update about content             ║
 ╚════════════════════════════════════════════════════════════════╝
-  `);
-});
+      `);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 export default app;

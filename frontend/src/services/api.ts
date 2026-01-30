@@ -169,6 +169,27 @@ export const diagnosisAPI = {
   },
 };
 
+// About APIs
+export interface AboutContent {
+  title: string;
+  content: string;
+  vision?: string;
+  mission?: string;
+  team?: Array<{ name: string; role: string; image?: string }>;
+}
+
+export const aboutAPI = {
+  get: async () => {
+    const response = await api.get<AboutContent>('/api/about');
+    return response.data;
+  },
+
+  update: async (data: AboutContent) => {
+    const response = await api.put('/api/about', data);
+    return response.data;
+  },
+};
+
 // Admin APIs
 export const adminAPI = {
   getStatistics: async () => {
@@ -186,6 +207,21 @@ export const adminAPI = {
   getAllUsers: async () => {
     const response = await api.get<{ users: User[] }>('/api/admin/users');
     return response.data.users;
+  },
+
+  createUser: async (data: { name: string; email: string; password: string; role: 'user' | 'admin' }) => {
+    const response = await api.post('/api/admin/users', data);
+    return response.data;
+  },
+
+  updateUser: async (id: number, data: { name?: string; email?: string; password?: string; role?: 'user' | 'admin' }) => {
+    const response = await api.put(`/api/admin/users/${id}`, data);
+    return response.data;
+  },
+
+  deleteUser: async (id: number) => {
+    const response = await api.delete(`/api/admin/users/${id}`);
+    return response.data;
   },
 };
 

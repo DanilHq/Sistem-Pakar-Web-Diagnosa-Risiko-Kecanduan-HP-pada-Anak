@@ -26,12 +26,7 @@ import AdminSymptoms from './pages/admin/AdminSymptoms';
 import AdminRules from './pages/admin/AdminRules';
 import AdminArticles from './pages/admin/AdminArticles';
 import AdminUsers from './pages/admin/AdminUsers';
-
-// Protected Route - Hanya untuk user yang sudah login
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
-}
+import AdminAbout from './pages/admin/AdminAbout';
 
 // Admin Route - Hanya untuk admin
 function AdminRoute({ children }: { children: React.ReactNode }) {
@@ -141,6 +136,14 @@ function App() {
           element={
             <AdminRoute>
               <AdminUsers />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/about"
+          element={
+            <AdminRoute>
+              <AdminAbout />
             </AdminRoute>
           }
         />

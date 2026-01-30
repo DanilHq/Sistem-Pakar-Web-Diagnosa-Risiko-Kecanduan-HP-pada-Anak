@@ -85,6 +85,20 @@ async function migrate() {
     );
   `);
 
+  // About content table
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS about_content (
+      id INTEGER PRIMARY KEY,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      vision TEXT,
+      mission TEXT,
+      team TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   // Create indexes for better performance
   await db.exec(`
     CREATE INDEX IF NOT EXISTS idx_symptoms_code ON symptoms(code);

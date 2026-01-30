@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import bcrypt from 'bcrypt';
 import db from '../database';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 
@@ -153,6 +154,167 @@ router.get('/users', authenticate, requireAdmin, async (req: AuthRequest, res: R
     res.json({ users });
   } catch (error) {
     console.error('Get users error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/admin/users
+ * Create a new user (admin only)
+ */
+router.post('/users', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Nama, email, dan password harus diisi' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password minimal 6 karakter' });
+    }
+
+    if (role && !['user', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Role harus "user" atau "admin"' });
+    }
+
+    // Check if email already exists
+    const checkStmt = await db.prepare('SELECT id FROM users WHERE email = ?');
+    const existingUser = checkStmt.get(email);
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email sudah terdaftar' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user
+    const stmt = await db.prepare(`
+      INSERT INTO users (name, email, password_hash, role)
+      VALUES (?, ?, ?, ?)
+    `);
+
+    const result = stmt.run(name, email, hashedPassword, role || 'user');
+    const userId = result.lastInsertRowid as number;
+
+    // Fetch the created user
+    const userStmt = await db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?');
+    const newUser = userStmt.get(userId);
+
+    res.status(201).json({ message: 'Pengguna berhasil ditambahkan', user: newUser });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/admin/users/:id
+ * Update a user (admin only)
+ */
+router.put('/users/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, email, password, role } = req.body;
+
+    // Check if user exists
+    const checkStmt = await db.prepare('SELECT * FROM users WHERE id = ?');
+    const existingUser = checkStmt.get(id) as any;
+
+    if (!existingUser) {
+      return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
+    }
+
+    // Check if email is taken by another user
+    if (email && email !== existingUser.email) {
+      const emailCheckStmt = await db.prepare('SELECT id FROM users WHERE email = ? AND id != ?');
+      const emailExists = emailCheckStmt.get(email, id);
+      if (emailExists) {
+        return res.status(400).json({ error: 'Email sudah digunakan pengguna lain' });
+      }
+    }
+
+    // Validate role
+    if (role && !['user', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Role harus "user" atau "admin"' });
+    }
+
+    // Build update query dynamically
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+
+    if (name) {
+      updateFields.push('name = ?');
+      updateValues.push(name);
+    }
+    if (email) {
+      updateFields.push('email = ?');
+      updateValues.push(email);
+    }
+    if (role) {
+      updateFields.push('role = ?');
+      updateValues.push(role);
+    }
+    if (password) {
+      if (password.length < 6) {
+        return res.status(400).json({ error: 'Password minimal 6 karakter' });
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updateFields.push('password_hash = ?');
+      updateValues.push(hashedPassword);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: 'Tidak ada data yang diupdate' });
+    }
+
+    updateValues.push(id);
+    const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
+    const updateStmt = await db.prepare(updateQuery);
+    updateStmt.run(...updateValues);
+
+    // Fetch updated user
+    const userStmt = await db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?');
+    const updatedUser = userStmt.get(id);
+
+    res.json({ message: 'Pengguna berhasil diperbarui', user: updatedUser });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/admin/users/:id
+ * Delete a user (admin only)
+ */
+router.delete('/users/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user?.id;
+
+    // Prevent admin from deleting themselves
+    if (parseInt(id) === adminId) {
+      return res.status(400).json({ error: 'Tidak dapat menghapus akun sendiri' });
+    }
+
+    // Check if user exists
+    const checkStmt = await db.prepare('SELECT id FROM users WHERE id = ?');
+    const existingUser = checkStmt.get(id);
+
+    if (!existingUser) {
+      return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
+    }
+
+    // Delete user
+    const deleteStmt = await db.prepare('DELETE FROM users WHERE id = ?');
+    deleteStmt.run(id);
+
+    res.json({ message: 'Pengguna berhasil dihapus' });
+  } catch (error) {
+    console.error('Delete user error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
