@@ -12,6 +12,7 @@ import {
   Loader,
   Shield,
   TrendingUp,
+  Info,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -114,7 +115,7 @@ export default function AdminDashboard() {
         {/* Quick Actions */}
         <div className="mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Aksi Cepat</h2>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link to="/admin/symptoms" className="card hover:shadow-lg transition">
               <div className="flex items-center space-x-3">
                 <Activity className="w-8 h-8 text-purple-600" />
@@ -141,6 +142,16 @@ export default function AdminDashboard() {
                 <div>
                   <h3 className="font-semibold text-gray-900">Kelola Artikel</h3>
                   <p className="text-sm text-gray-600">CRUD artikel edukasi</p>
+                </div>
+              </div>
+            </Link>
+
+            <Link to="/admin/about" className="card hover:shadow-lg transition">
+              <div className="flex items-center space-x-3">
+                <Info className="w-8 h-8 text-cyan-600" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">Kelola Tentang</h3>
+                  <p className="text-sm text-gray-600">Edit halaman tentang</p>
                 </div>
               </div>
             </Link>

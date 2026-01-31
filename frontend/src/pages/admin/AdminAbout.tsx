@@ -7,17 +7,14 @@ import {
   AlertCircle, 
   Save, 
   ArrowLeft,
-  Plus,
-  Trash2,
-  User
+  Mail,
+  Phone,
+  MapPin,
+  User,
+  Eye,
+  Target
 } from 'lucide-react';
 import Toast, { ToastType } from '../../components/Toast';
-
-interface TeamMember {
-  name: string;
-  role: string;
-  image?: string;
-}
 
 export default function AdminAbout() {
   const [loading, setLoading] = useState(true);
@@ -27,10 +24,14 @@ export default function AdminAbout() {
 
   const [formData, setFormData] = useState<AboutContent>({
     title: '',
-    content: '',
+    description: '',
     vision: '',
     mission: '',
-    team: [],
+    developer_name: '',
+    developer_info: '',
+    contact_email: '',
+    contact_phone: '',
+    address: '',
   });
 
   const showToast = (message: string, type: ToastType) => {
@@ -57,7 +58,7 @@ export default function AdminAbout() {
     setSaving(true);
     try {
       await aboutAPI.update(formData);
-      showToast('✅ Konten berhasil disimpan!', 'success');
+      showToast('✅ Konten halaman Tentang berhasil disimpan!', 'success');
     } catch (err: any) {
       showToast(err.response?.data?.error || '❌ Gagal menyimpan konten', 'error');
     } finally {
@@ -65,22 +66,8 @@ export default function AdminAbout() {
     }
   };
 
-  const addTeamMember = () => {
-    setFormData({
-      ...formData,
-      team: [...(formData.team || []), { name: '', role: '', image: '' }],
-    });
-  };
-
-  const updateTeamMember = (index: number, field: keyof TeamMember, value: string) => {
-    const newTeam = [...(formData.team || [])];
-    newTeam[index] = { ...newTeam[index], [field]: value };
-    setFormData({ ...formData, team: newTeam });
-  };
-
-  const removeTeamMember = (index: number) => {
-    const newTeam = (formData.team || []).filter((_, i) => i !== index);
-    setFormData({ ...formData, team: newTeam });
+  const handleChange = (field: keyof AboutContent, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   if (loading) {
@@ -109,12 +96,22 @@ export default function AdminAbout() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Kembali ke Dashboard
             </Link>
-            <div className="flex items-center space-x-3">
-              <Info className="w-8 h-8 text-blue-600" />
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Kelola Halaman Tentang</h1>
-                <p className="text-gray-600">Edit konten halaman tentang aplikasi</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Info className="w-8 h-8 text-blue-600" />
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Kelola Halaman Tentang</h1>
+                  <p className="text-gray-600">Edit konten halaman "Tentang" yang ditampilkan ke pengunjung</p>
+                </div>
               </div>
+              <Link 
+                to="/about" 
+                target="_blank"
+                className="btn btn-secondary flex items-center"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Lihat Halaman
+              </Link>
             </div>
           </div>
 
@@ -126,140 +123,163 @@ export default function AdminAbout() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Title */}
+            {/* Basic Information */}
             <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Informasi Utama</h3>
+              <div className="flex items-center space-x-2 mb-4">
+                <Info className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-semibold">Informasi Utama</h3>
+              </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Judul</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Judul Halaman
+                  </label>
                   <input
                     type="text"
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) => handleChange('title', e.target.value)}
                     className="input"
                     placeholder="Tentang Sistem Pakar"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Deskripsi
+                  </label>
                   <textarea
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    value={formData.description}
+                    onChange={(e) => handleChange('description', e.target.value)}
                     className="input"
                     rows={4}
                     placeholder="Deskripsi tentang sistem pakar ini..."
                   />
+                  <p className="text-xs text-gray-500 mt-1">Deskripsi singkat tentang sistem pakar yang akan ditampilkan di halaman Tentang</p>
                 </div>
               </div>
             </div>
 
             {/* Vision & Mission */}
             <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Visi & Misi</h3>
+              <div className="flex items-center space-x-2 mb-4">
+                <Target className="w-5 h-5 text-purple-600" />
+                <h3 className="text-lg font-semibold">Visi & Misi</h3>
+              </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Visi</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Visi
+                  </label>
                   <textarea
-                    value={formData.vision || ''}
-                    onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
+                    value={formData.vision}
+                    onChange={(e) => handleChange('vision', e.target.value)}
                     className="input"
                     rows={3}
-                    placeholder="Visi sistem pakar..."
+                    placeholder="Visi dari sistem pakar ini..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Misi</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Misi
+                  </label>
                   <textarea
-                    value={formData.mission || ''}
-                    onChange={(e) => setFormData({ ...formData, mission: e.target.value })}
+                    value={formData.mission}
+                    onChange={(e) => handleChange('mission', e.target.value)}
                     className="input"
                     rows={3}
-                    placeholder="Misi sistem pakar..."
+                    placeholder="Misi dari sistem pakar ini..."
                   />
                 </div>
               </div>
             </div>
 
-            {/* Team Members */}
+            {/* Developer Info */}
             <div className="card">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Tim Pengembang</h3>
-                <button
-                  type="button"
-                  onClick={addTeamMember}
-                  className="btn btn-secondary text-sm"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Tambah Anggota
-                </button>
+              <div className="flex items-center space-x-2 mb-4">
+                <User className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-semibold">Informasi Pengembang</h3>
               </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nama Pengembang / Tim
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.developer_name}
+                    onChange={(e) => handleChange('developer_name', e.target.value)}
+                    className="input"
+                    placeholder="Nama pengembang atau tim"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Informasi Pengembang
+                  </label>
+                  <textarea
+                    value={formData.developer_info}
+                    onChange={(e) => handleChange('developer_info', e.target.value)}
+                    className="input"
+                    rows={3}
+                    placeholder="Informasi tambahan tentang pengembang (institusi, latar belakang, dll)"
+                  />
+                </div>
+              </div>
+            </div>
 
-              {(formData.team || []).length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <User className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p>Belum ada anggota tim</p>
-                  <button
-                    type="button"
-                    onClick={addTeamMember}
-                    className="text-primary-600 hover:text-primary-700 mt-2"
-                  >
-                    Tambah anggota pertama
-                  </button>
+            {/* Contact Info */}
+            <div className="card">
+              <div className="flex items-center space-x-2 mb-4">
+                <Mail className="w-5 h-5 text-orange-600" />
+                <h3 className="text-lg font-semibold">Informasi Kontak</h3>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Mail className="w-4 h-4 inline mr-1" />
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.contact_email}
+                    onChange={(e) => handleChange('contact_email', e.target.value)}
+                    className="input"
+                    placeholder="admin@example.com"
+                  />
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {(formData.team || []).map((member, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <span className="text-sm font-medium text-gray-500">Anggota #{index + 1}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeTeamMember(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-                          <input
-                            type="text"
-                            value={member.name}
-                            onChange={(e) => updateTeamMember(index, 'name', e.target.value)}
-                            className="input"
-                            placeholder="Nama anggota"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Peran/Jabatan</label>
-                          <input
-                            type="text"
-                            value={member.role}
-                            onChange={(e) => updateTeamMember(index, 'role', e.target.value)}
-                            className="input"
-                            placeholder="Developer, Designer, dll"
-                          />
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">URL Foto (opsional)</label>
-                        <input
-                          type="url"
-                          value={member.image || ''}
-                          onChange={(e) => updateTeamMember(index, 'image', e.target.value)}
-                          className="input"
-                          placeholder="https://example.com/photo.jpg"
-                        />
-                      </div>
-                    </div>
-                  ))}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Phone className="w-4 h-4 inline mr-1" />
+                    Telepon
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.contact_phone}
+                    onChange={(e) => handleChange('contact_phone', e.target.value)}
+                    className="input"
+                    placeholder="+62 xxx xxxx xxxx"
+                  />
                 </div>
-              )}
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <MapPin className="w-4 h-4 inline mr-1" />
+                  Alamat
+                </label>
+                <textarea
+                  value={formData.address}
+                  onChange={(e) => handleChange('address', e.target.value)}
+                  className="input"
+                  rows={2}
+                  placeholder="Alamat lengkap (opsional)"
+                />
+              </div>
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end">
+            <div className="flex justify-end space-x-3">
+              <Link to="/admin" className="btn btn-secondary">
+                Batal
+              </Link>
               <button
                 type="submit"
                 disabled={saving}

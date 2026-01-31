@@ -16,17 +16,17 @@ router.get('/', async (req, res: Response) => {
     if (!content) {
       // Return default content if none exists
       return res.json({
+        id: 1,
         title: 'Tentang Sistem Pakar',
-        content: 'Sistem Pakar Diagnosa Risiko Kecanduan HP pada Anak',
-        vision: 'Menjadi sistem yang membantu orang tua dalam mendeteksi dini kecanduan gadget pada anak.',
-        mission: 'Memberikan diagnosa awal yang akurat berdasarkan gejala-gejala yang diamati.',
-        team: []
+        description: 'Sistem Pakar Diagnosa Risiko Kecanduan HP pada Anak adalah aplikasi web yang dikembangkan untuk membantu orang tua mendeteksi dini tanda-tanda kecanduan gadget pada anak.',
+        vision: 'Menjadi sistem yang membantu orang tua dalam mendeteksi dini kecanduan gadget pada anak secara akurat dan mudah diakses.',
+        mission: 'Memberikan diagnosa awal yang akurat berdasarkan gejala-gejala yang diamati, serta edukasi kepada orang tua tentang kecanduan gadget pada anak.',
+        developer_name: 'Tim Pengembang',
+        developer_info: 'Sistem ini dikembangkan sebagai bagian dari penelitian tentang kecerdasan buatan dan sistem pakar.',
+        contact_email: 'admin@example.com',
+        contact_phone: '',
+        address: ''
       });
-    }
-
-    // Parse team if stored as JSON
-    if (content.team && typeof content.team === 'string') {
-      content.team = JSON.parse(content.team);
     }
 
     res.json(content);
@@ -42,32 +42,73 @@ router.get('/', async (req, res: Response) => {
  */
 router.put('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, content, vision, mission, team } = req.body;
+    const { 
+      title, 
+      description, 
+      vision, 
+      mission, 
+      developer_name,
+      developer_info,
+      contact_email,
+      contact_phone,
+      address
+    } = req.body;
 
     // Check if about content exists
     const checkStmt = await db.prepare('SELECT id FROM about_content WHERE id = 1');
     const existing = checkStmt.get();
 
-    const teamJson = team ? JSON.stringify(team) : '[]';
-
     if (existing) {
       // Update existing
       const updateStmt = await db.prepare(`
         UPDATE about_content 
-        SET title = ?, content = ?, vision = ?, mission = ?, team = ?, updated_at = CURRENT_TIMESTAMP
+        SET title = ?, 
+            description = ?, 
+            vision = ?, 
+            mission = ?, 
+            developer_name = ?,
+            developer_info = ?,
+            contact_email = ?,
+            contact_phone = ?,
+            address = ?,
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = 1
       `);
-      updateStmt.run(title, content, vision, mission, teamJson);
+      updateStmt.run(
+        title, 
+        description, 
+        vision, 
+        mission, 
+        developer_name,
+        developer_info,
+        contact_email,
+        contact_phone,
+        address
+      );
     } else {
       // Insert new
       const insertStmt = await db.prepare(`
-        INSERT INTO about_content (id, title, content, vision, mission, team)
-        VALUES (1, ?, ?, ?, ?, ?)
+        INSERT INTO about_content (id, title, description, vision, mission, developer_name, developer_info, contact_email, contact_phone, address)
+        VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      insertStmt.run(title, content, vision, mission, teamJson);
+      insertStmt.run(
+        title, 
+        description, 
+        vision, 
+        mission, 
+        developer_name,
+        developer_info,
+        contact_email,
+        contact_phone,
+        address
+      );
     }
 
-    res.json({ message: 'Konten berhasil diperbarui' });
+    // Return updated content
+    const stmt = await db.prepare('SELECT * FROM about_content WHERE id = 1');
+    const content = stmt.get();
+
+    res.json({ message: 'Konten berhasil diperbarui', data: content });
   } catch (error) {
     console.error('Update about content error:', error);
     res.status(500).json({ error: 'Internal server error' });

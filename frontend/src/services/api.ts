@@ -171,11 +171,16 @@ export const diagnosisAPI = {
 
 // About APIs
 export interface AboutContent {
+  id?: number;
   title: string;
-  content: string;
-  vision?: string;
-  mission?: string;
-  team?: Array<{ name: string; role: string; image?: string }>;
+  description: string;
+  vision: string;
+  mission: string;
+  developer_name: string;
+  developer_info: string;
+  contact_email: string;
+  contact_phone: string;
+  address: string;
 }
 
 export const aboutAPI = {

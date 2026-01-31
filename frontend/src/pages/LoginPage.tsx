@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { useAuthStore } from '../store/authStore';
-import { LogIn, Mail, Lock, AlertCircle, Loader, Info } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, Loader } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,12 +15,11 @@ export default function LoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [infoMessage, setInfoMessage] = useState('');
 
   useEffect(() => {
     // Check if there's a message from navigation state
     if (location.state?.message) {
-      setInfoMessage(location.state.message);
+      setError(location.state.message);
     }
   }, [location]);
 
@@ -138,19 +137,6 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-        </div>
-
-        {/* Info */}
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>
-            Atau{' '}
-            <Link to="/diagnose" className="text-primary-600 hover:text-primary-700 font-semibold">
-              lanjutkan tanpa login
-            </Link>
-          </p>
-          <p className="mt-2 text-xs text-gray-500">
-            (Hasil diagnosa tidak akan tersimpan jika tidak login)
-          </p>
         </div>
       </div>
     </div>

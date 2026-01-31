@@ -89,11 +89,15 @@ async function migrate() {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS about_content (
       id INTEGER PRIMARY KEY,
-      title TEXT NOT NULL,
-      content TEXT NOT NULL,
+      title TEXT,
+      description TEXT,
       vision TEXT,
       mission TEXT,
-      team TEXT,
+      developer_name TEXT,
+      developer_info TEXT,
+      contact_email TEXT,
+      contact_phone TEXT,
+      address TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     );

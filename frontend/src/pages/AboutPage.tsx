@@ -1,19 +1,71 @@
-import { Brain, Target, GitBranch, Shield, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Brain, Target, GitBranch, Shield, AlertCircle, Loader, Mail, Phone, MapPin, User } from 'lucide-react';
+import { aboutAPI, AboutContent } from '../services/api';
 
 export default function AboutPage() {
+  const [aboutContent, setAboutContent] = useState<AboutContent | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadAboutContent();
+  }, []);
+
+  const loadAboutContent = async () => {
+    try {
+      const data = await aboutAPI.get();
+      setAboutContent(data);
+    } catch (error) {
+      console.error('Failed to load about content:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
+        <Loader className="w-8 h-8 animate-spin text-primary-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">Tentang Sistem Pakar</h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        {aboutContent?.title || 'Tentang Sistem Pakar'}
+      </h1>
 
       {/* Introduction */}
       <div className="card mb-8">
         <p className="text-lg text-gray-700 leading-relaxed">
-          Sistem Pakar Diagnosa Risiko Kecanduan HP pada Anak adalah aplikasi web yang dikembangkan untuk membantu
-          orang tua mendeteksi dini tanda-tanda kecanduan gadget pada anak. Sistem ini menggunakan pendekatan{' '}
-          <strong>Forward Chaining</strong>, sebuah metode inferensi dalam kecerdasan buatan yang bekerja dari
-          fakta-fakta yang diketahui menuju kesimpulan.
+          {aboutContent?.description || 
+            'Sistem Pakar Diagnosa Risiko Kecanduan HP pada Anak adalah aplikasi web yang dikembangkan untuk membantu orang tua mendeteksi dini tanda-tanda kecanduan gadget pada anak. Sistem ini menggunakan pendekatan Forward Chaining, sebuah metode inferensi dalam kecerdasan buatan yang bekerja dari fakta-fakta yang diketahui menuju kesimpulan.'}
         </p>
       </div>
+
+      {/* Vision & Mission */}
+      {(aboutContent?.vision || aboutContent?.mission) && (
+        <section className="mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <Target className="w-8 h-8 text-purple-600" />
+            <h2 className="text-2xl font-bold">Visi & Misi</h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {aboutContent?.vision && (
+              <div className="card border-l-4 border-purple-500">
+                <h3 className="font-semibold text-lg mb-3 text-purple-600">Visi</h3>
+                <p className="text-gray-700 text-sm">{aboutContent.vision}</p>
+              </div>
+            )}
+            {aboutContent?.mission && (
+              <div className="card border-l-4 border-blue-500">
+                <h3 className="font-semibold text-lg mb-3 text-blue-600">Misi</h3>
+                <p className="text-gray-700 text-sm">{aboutContent.mission}</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Forward Chaining Explanation */}
       <section className="mb-8">
@@ -114,6 +166,60 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* Developer Info */}
+      {(aboutContent?.developer_name || aboutContent?.developer_info) && (
+        <section className="mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <User className="w-8 h-8 text-green-600" />
+            <h2 className="text-2xl font-bold">Pengembang</h2>
+          </div>
+          <div className="card">
+            {aboutContent?.developer_name && (
+              <h3 className="font-semibold text-lg mb-2 text-primary-600">{aboutContent.developer_name}</h3>
+            )}
+            {aboutContent?.developer_info && (
+              <p className="text-gray-700">{aboutContent.developer_info}</p>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Contact Info */}
+      {(aboutContent?.contact_email || aboutContent?.contact_phone || aboutContent?.address) && (
+        <section className="mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <Mail className="w-8 h-8 text-blue-600" />
+            <h2 className="text-2xl font-bold">Kontak</h2>
+          </div>
+          <div className="card">
+            <div className="space-y-3">
+              {aboutContent?.contact_email && (
+                <div className="flex items-center space-x-3">
+                  <Mail className="w-5 h-5 text-gray-500" />
+                  <a href={`mailto:${aboutContent.contact_email}`} className="text-primary-600 hover:underline">
+                    {aboutContent.contact_email}
+                  </a>
+                </div>
+              )}
+              {aboutContent?.contact_phone && (
+                <div className="flex items-center space-x-3">
+                  <Phone className="w-5 h-5 text-gray-500" />
+                  <a href={`tel:${aboutContent.contact_phone}`} className="text-primary-600 hover:underline">
+                    {aboutContent.contact_phone}
+                  </a>
+                </div>
+              )}
+              {aboutContent?.address && (
+                <div className="flex items-start space-x-3">
+                  <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
+                  <span className="text-gray-700">{aboutContent.address}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Disclaimer */}
       <section>

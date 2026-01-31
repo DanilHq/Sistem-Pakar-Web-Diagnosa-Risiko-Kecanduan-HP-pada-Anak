@@ -9,8 +9,8 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronLeft,
   Shield,
+  Info,
 } from 'lucide-react';
 import { useState } from 'react';
 import Logo from './Logo';
@@ -27,7 +27,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const menuItems = [
@@ -36,6 +36,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { path: '/admin/rules', icon: FileText, label: 'Kelola Aturan' },
     { path: '/admin/articles', icon: BookOpen, label: 'Kelola Artikel' },
     { path: '/admin/users', icon: Users, label: 'Kelola User' },
+    { path: '/admin/about', icon: Info, label: 'Kelola Tentang' },
   ];
 
   const isActive = (path: string) => {
@@ -132,14 +133,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </nav>
 
         {/* Bottom Actions */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 space-y-2">
-          <Link
-            to="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition text-sm"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            <span>Kembali ke Website</span>
-          </Link>
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition text-sm"
