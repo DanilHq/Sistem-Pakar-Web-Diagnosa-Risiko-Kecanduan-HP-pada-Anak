@@ -453,3 +453,62 @@ Developed for educational purposes and public health awareness.
 ---
 
 ⭐ **Star this repo** if you find it helpful!
+
+---
+
+## 🐳 Panduan Instalasi & Menjalankan dengan Docker
+
+Berikut adalah panduan untuk menjalankan aplikasi menggunakan Docker Container. Metode ini lebih praktis karena tidak perlu menginstall Node.js atau PostgreSQL secara manual di komputer host.
+
+### Prasyarat
+- **Docker Engine** & **Docker Compose**
+  - **Windows**: Install [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/)
+  - **Linux**: Install Docker Engine dan Docker Compose plugin (`sudo apt install docker.io docker-compose-v2`)
+
+### Langkah-Langkah (Windows & Linux)
+
+1. **Clone Repository**
+   ```bash
+   git clone <repository-url>
+   cd "Sistem Pakar Web — Diagnosa Risiko Kecanduan HP pada Anak"
+   ```
+
+2. **Jalankan Docker Compose**
+   Buka terminal (PowerShell di Windows atau Terminal di Linux) dan jalankan:
+   ```bash
+   docker-compose up --build
+   ```
+   *Tunggu beberapa saat hingga proses build image, migrasi database, dan seeding selesai.*
+
+3. **Akses Aplikasi**
+   Setelah semua container berjalan (status "healthy"), akses di browser:
+   - **Frontend**: [http://localhost:5173](http://localhost:5173)
+   - **Backend API**: [http://localhost:5000](http://localhost:5000)
+
+### Perintah Berguna Lainnya
+
+- **Menjalankan di Background (Detached)**
+  ```bash
+  docker-compose up -d
+  ```
+
+- **Menghentikan Aplikasi**
+  ```bash
+  docker-compose down
+  ```
+
+- **Melihat Log**
+  ```bash
+  # Semua log
+  docker-compose logs -f
+
+  # Log spesifik service (misal backend)
+  docker-compose logs -f backend
+  ```
+
+- **Clean Up (Hapus Container & Volume)**
+  *Peringatan: Ini akan menghapus data database!*
+  ```bash
+  docker-compose down -v
+  ```
+
