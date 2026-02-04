@@ -6,15 +6,15 @@ dotenv.config();
 // PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Or use individual params:
-  // host: process.env.DB_HOST || 'localhost',
-  // port: parseInt(process.env.DB_PORT || '5432'),
-  // database: process.env.DB_NAME || 'diagnosa_hp',
-  // user: process.env.DB_USER || 'postgres',
-  // password: process.env.DB_PASSWORD || 'postgres',
+  // Fallback to individual params if DATABASE_URL is not set:
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'diagnosa_db',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000,
 });
 
 // Test connection on startup

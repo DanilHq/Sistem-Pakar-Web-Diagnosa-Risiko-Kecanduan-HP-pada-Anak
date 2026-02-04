@@ -1,0 +1,29 @@
+# Base image
+FROM node:18-alpine
+
+# Install build dependencies for native modules (bcrypt, etc.)
+RUN apk add --no-cache python3 make g++
+
+# Set working directory
+WORKDIR /app
+
+# Copy dependency files
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+RUN npm install
+
+# Rebuild bcrypt for Alpine
+RUN npm rebuild bcrypt --build-from-source
+
+# Copy all source code
+COPY . .
+
+# Build TypeScript to JavaScript
+RUN npm run build
+
+# Expose backend port
+EXPOSE 5000
+
+# Use Node.js startup script
+CMD ["node", "start.js"]

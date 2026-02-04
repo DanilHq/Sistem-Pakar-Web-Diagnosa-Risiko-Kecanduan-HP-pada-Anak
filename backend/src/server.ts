@@ -37,6 +37,40 @@ app.use(limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Root endpoint - API information
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Sistem Pakar - Diagnosa Risiko Kecanduan HP pada Anak',
+    version: '1.0.0',
+    description: 'API untuk sistem pakar diagnosa kecanduan HP menggunakan metode Forward Chaining',
+    status: 'running',
+    endpoints: {
+      health: 'GET /health - Health check',
+      auth: {
+        register: 'POST /api/auth/register - Register new user',
+        login: 'POST /api/auth/login - User login',
+        me: 'GET /api/auth/me - Get current user'
+      },
+      diagnose: {
+        create: 'POST /api/diagnose - Run diagnosis',
+        history: 'GET /api/diagnose/history - Get diagnosis history',
+        getById: 'GET /api/diagnose/:id - Get diagnosis by ID'
+      },
+      symptoms: 'GET /api/symptoms - Get all symptoms',
+      articles: 'GET /api/articles - Get all articles',
+      about: 'GET /api/about - Get about content',
+      admin: {
+        statistics: 'GET /api/admin/statistics - System statistics',
+        users: 'CRUD /api/admin/users/* - Manage users',
+        symptoms: 'CRUD /api/symptoms/* - Manage symptoms',
+        rules: 'CRUD /api/rules/* - Manage rules',
+        articles: 'CRUD /api/articles/* - Manage articles'
+      }
+    },
+    documentation: 'See openapi.yaml for full API specification'
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -73,17 +107,18 @@ async function startServer() {
   try {
     await db.init();
     console.log('Database initialized');
-    
-    app.listen(PORT, () => {
+
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`
 ╔════════════════════════════════════════════════════════════════╗
 ║  🏥 Sistem Pakar - Diagnosa Kecanduan HP pada Anak            ║
 ║  Server running on http://localhost:${PORT}                     ║
 ║                                                                ║
 ║  Environment: ${process.env.NODE_ENV || 'development'}                            ║
-║  Database: SQLite (${process.env.DATABASE_PATH || './database.db'})              ║
+║  Database: PostgreSQL (${process.env.DB_NAME || 'diagnosa_db'})                 ║
 ║                                                                ║
 ║  📚 API Documentation:                                         ║
+║  GET  /                    - API Information (JSON)           ║
 ║  GET  /health              - Health check                     ║
 ║  POST /api/auth/register   - Register new user                ║
 ║  POST /api/auth/login      - Login                            ║
