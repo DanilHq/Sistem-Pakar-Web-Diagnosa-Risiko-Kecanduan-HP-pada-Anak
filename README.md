@@ -469,8 +469,8 @@ Berikut adalah panduan untuk menjalankan aplikasi menggunakan Docker Container. 
 
 1. **Clone Repository**
    ```bash
-   git clone <repository-url>
-   cd "Sistem Pakar Web — Diagnosa Risiko Kecanduan HP pada Anak"
+   git clone https://github.com/DanilHq/Sistem-Pakar-Web-Diagnosa-Risiko-Kecanduan-HP-pada-Anak.git
+   cd Sistem-Pakar-Web-Diagnosa-Risiko-Kecanduan-HP-pada-Anak
    ```
 
 2. **Jalankan Docker Compose**
