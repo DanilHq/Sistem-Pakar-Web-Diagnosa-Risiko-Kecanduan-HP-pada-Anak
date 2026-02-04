@@ -86,8 +86,8 @@ Sistem pakar berbasis web untuk mendiagnosa risiko kecanduan HP pada anak menggu
 
 ### 1. Clone Repository
 ```bash
-git clone <repository-url>
-cd "Sistem Pakar Web — Diagnosa Risiko Kecanduan HP pada Anak"
+git clone https://github.com/DanilHq/Sistem-Pakar-Web-Diagnosa-Risiko-Kecanduan-HP-pada-Anak
+cd Sistem-Pakar-Web-Diagnosa-Risiko-Kecanduan-HP-pada-Anak
 ```
 
 ### 2. Setup Backend
