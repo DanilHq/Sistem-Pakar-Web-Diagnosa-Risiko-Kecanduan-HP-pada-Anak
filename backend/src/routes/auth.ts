@@ -24,8 +24,8 @@ router.post('/register', async (req: Request, res: Response) => {
     }
 
     // Check if user already exists
-    const stmt1 = await db.prepare('SELECT id FROM users WHERE email = ?');
-    const existingUser = stmt1.get(email);
+    const stmt1 = await db.prepare('SELECT id FROM users WHERE email = $1');
+    const existingUser = await stmt1.get(email);
 
     if (existingUser) {
       return res.status(400).json({ error: 'Email already registered' });
@@ -34,14 +34,15 @@ router.post('/register', async (req: Request, res: Response) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user
-    const stmt = await db.prepare(`
-      INSERT INTO users (name, email, password_hash, role)
-      VALUES (?, ?, ?, 'user')
-    `);
+    // Insert user and return the id
+    const result = await db.query(
+      `INSERT INTO users (name, email, password_hash, role)
+       VALUES ($1, $2, $3, 'user')
+       RETURNING id`,
+      [name, email, hashedPassword]
+    );
 
-    const result = stmt.run(name, email, hashedPassword);
-    const userId = result.lastInsertRowid as number;
+    const userId = result.rows[0].id as number;
 
     // Generate token
     const token = generateToken({
@@ -81,8 +82,8 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     // Find user
-    const stmt2 = await db.prepare('SELECT * FROM users WHERE email = ?');
-    const user = stmt2.get(email) as any;
+    const stmt2 = await db.prepare('SELECT * FROM users WHERE email = $1');
+    const user = await stmt2.get(email) as any;
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -135,8 +136,8 @@ router.get('/me', async (req: Request, res: Response) => {
     const { verifyToken } = await import('../utils/jwt');
     const payload = verifyToken(token);
 
-    const stmt3 = await db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?');
-    const user = stmt3.get(payload.id) as any;
+    const stmt3 = await db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = $1');
+    const user = await stmt3.get(payload.id) as any;
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

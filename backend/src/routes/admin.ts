@@ -12,12 +12,12 @@ const router = Router();
 router.get('/statistics', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     // Total users
-    const totalUsersStmt = await db.prepare('SELECT COUNT(*) as count FROM users WHERE role = "user"');
-    const totalUsers = totalUsersStmt.get() as any;
+    const totalUsersStmt = await db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'user'");
+    const totalUsers = await totalUsersStmt.get() as any;
 
     // Total diagnoses
     const totalDiagnosesStmt = await db.prepare('SELECT COUNT(*) as count FROM diagnoses');
-    const totalDiagnoses = totalDiagnosesStmt.get() as any;
+    const totalDiagnoses = await totalDiagnosesStmt.get() as any;
 
     // Diagnoses by result category
     const diagnosisByCategoryStmt = await db.prepare(`
@@ -26,31 +26,31 @@ router.get('/statistics', authenticate, requireAdmin, async (req: AuthRequest, r
         GROUP BY result
         ORDER BY result
       `);
-    const diagnosisByCategory = diagnosisByCategoryStmt.all() as any[];
+    const diagnosisByCategory = await diagnosisByCategoryStmt.all() as any[];
 
     // Get category names
     const categoriesMap = new Map();
     const categoriesStmt = await db.prepare('SELECT code, name FROM categories');
-    const categories = categoriesStmt.all() as any[];
+    const categories = await categoriesStmt.all() as any[];
     categories.forEach((cat) => categoriesMap.set(cat.code, cat.name));
 
     const diagnosisDistribution = diagnosisByCategory.map((item) => ({
       code: item.result,
       name: categoriesMap.get(item.result) || item.result,
-      count: item.count,
+      count: parseInt(item.count),
     }));
 
-    // Recent diagnoses (last 7 days)
+    // Recent diagnoses (last 7 days) - PostgreSQL syntax
     const recentDiagnosesStmt = await db.prepare(`
         SELECT COUNT(*) as count
         FROM diagnoses
-        WHERE created_at >= datetime('now', '-7 days')
+        WHERE created_at >= NOW() - INTERVAL '7 days'
       `);
-    const recentDiagnoses = recentDiagnosesStmt.get() as any;
+    const recentDiagnoses = await recentDiagnosesStmt.get() as any;
 
     // Most common symptoms
     const allDiagnosesStmt = await db.prepare('SELECT selected_symptoms FROM diagnoses');
-    const allDiagnoses = allDiagnosesStmt.all() as any[];
+    const allDiagnoses = await allDiagnosesStmt.all() as any[];
     const symptomCount = new Map<string, number>();
 
     allDiagnoses.forEach((d) => {
@@ -67,30 +67,30 @@ router.get('/statistics', authenticate, requireAdmin, async (req: AuthRequest, r
 
     // Total active symptoms and rules
     const activeSymptomsStmt = await db.prepare('SELECT COUNT(*) as count FROM symptoms WHERE active = 1');
-    const activeSymptoms = activeSymptomsStmt.get() as any;
+    const activeSymptoms = await activeSymptomsStmt.get() as any;
     const activeRulesStmt = await db.prepare('SELECT COUNT(*) as count FROM rules WHERE active = 1');
-    const activeRules = activeRulesStmt.get() as any;
+    const activeRules = await activeRulesStmt.get() as any;
     const publishedArticlesStmt = await db.prepare('SELECT COUNT(*) as count FROM articles WHERE published = 1');
-    const publishedArticles = publishedArticlesStmt.get() as any;
+    const publishedArticles = await publishedArticlesStmt.get() as any;
 
     res.json({
       users: {
-        total: totalUsers.count,
+        total: parseInt(totalUsers.count),
       },
       diagnoses: {
-        total: totalDiagnoses.count,
-        recent_7_days: recentDiagnoses.count,
+        total: parseInt(totalDiagnoses.count),
+        recent_7_days: parseInt(recentDiagnoses.count),
         distribution: diagnosisDistribution,
       },
       symptoms: {
-        active: activeSymptoms.count,
+        active: parseInt(activeSymptoms.count),
         top_10: topSymptoms,
       },
       rules: {
-        active: activeRules.count,
+        active: parseInt(activeRules.count),
       },
       articles: {
-        published: publishedArticles.count,
+        published: parseInt(publishedArticles.count),
       },
     });
   } catch (error) {
@@ -109,19 +109,19 @@ router.get('/diagnoses', authenticate, requireAdmin, async (req: AuthRequest, re
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = (page - 1) * limit;
 
-    const diagnosesStmt = await db.prepare(`
+    const diagnosesResult = await db.query(`
         SELECT d.*, u.name as user_name, u.email as user_email
         FROM diagnoses d
         LEFT JOIN users u ON d.user_id = u.id
         ORDER BY d.created_at DESC
-        LIMIT ? OFFSET ?
-      `);
-    const diagnoses = diagnosesStmt.all(limit, offset) as any[];
+        LIMIT $1 OFFSET $2
+      `, [limit, offset]);
+    const diagnoses = diagnosesResult.rows;
 
     const totalStmt = await db.prepare('SELECT COUNT(*) as count FROM diagnoses');
-    const total = totalStmt.get() as any;
+    const total = await totalStmt.get() as any;
 
-    const parsedDiagnoses = diagnoses.map((d) => ({
+    const parsedDiagnoses = diagnoses.map((d: any) => ({
       ...d,
       selected_symptoms: JSON.parse(d.selected_symptoms),
       trace: JSON.parse(d.trace),
@@ -132,8 +132,8 @@ router.get('/diagnoses', authenticate, requireAdmin, async (req: AuthRequest, re
       pagination: {
         page,
         limit,
-        total: total.count,
-        total_pages: Math.ceil(total.count / limit),
+        total: parseInt(total.count),
+        total_pages: Math.ceil(parseInt(total.count) / limit),
       },
     });
   } catch (error) {
@@ -149,7 +149,7 @@ router.get('/diagnoses', authenticate, requireAdmin, async (req: AuthRequest, re
 router.get('/users', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const stmt = await db.prepare('SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC');
-    const users = stmt.all();
+    const users = await stmt.all();
 
     res.json({ users });
   } catch (error) {
@@ -180,8 +180,8 @@ router.post('/users', authenticate, requireAdmin, async (req: AuthRequest, res: 
     }
 
     // Check if email already exists
-    const checkStmt = await db.prepare('SELECT id FROM users WHERE email = ?');
-    const existingUser = checkStmt.get(email);
+    const checkStmt = await db.prepare('SELECT id FROM users WHERE email = $1');
+    const existingUser = await checkStmt.get(email);
 
     if (existingUser) {
       return res.status(400).json({ error: 'Email sudah terdaftar' });
@@ -190,18 +190,15 @@ router.post('/users', authenticate, requireAdmin, async (req: AuthRequest, res: 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user
-    const stmt = await db.prepare(`
-      INSERT INTO users (name, email, password_hash, role)
-      VALUES (?, ?, ?, ?)
-    `);
+    // Insert user and return
+    const result = await db.query(
+      `INSERT INTO users (name, email, password_hash, role)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, name, email, role, created_at`,
+      [name, email, hashedPassword, role || 'user']
+    );
 
-    const result = stmt.run(name, email, hashedPassword, role || 'user');
-    const userId = result.lastInsertRowid as number;
-
-    // Fetch the created user
-    const userStmt = await db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?');
-    const newUser = userStmt.get(userId);
+    const newUser = result.rows[0];
 
     res.status(201).json({ message: 'Pengguna berhasil ditambahkan', user: newUser });
   } catch (error) {
@@ -220,8 +217,8 @@ router.put('/users/:id', authenticate, requireAdmin, async (req: AuthRequest, re
     const { name, email, password, role } = req.body;
 
     // Check if user exists
-    const checkStmt = await db.prepare('SELECT * FROM users WHERE id = ?');
-    const existingUser = checkStmt.get(id) as any;
+    const checkStmt = await db.prepare('SELECT * FROM users WHERE id = $1');
+    const existingUser = await checkStmt.get(id) as any;
 
     if (!existingUser) {
       return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
@@ -229,9 +226,11 @@ router.put('/users/:id', authenticate, requireAdmin, async (req: AuthRequest, re
 
     // Check if email is taken by another user
     if (email && email !== existingUser.email) {
-      const emailCheckStmt = await db.prepare('SELECT id FROM users WHERE email = ? AND id != ?');
-      const emailExists = emailCheckStmt.get(email, id);
-      if (emailExists) {
+      const emailCheckResult = await db.query(
+        'SELECT id FROM users WHERE email = $1 AND id != $2',
+        [email, id]
+      );
+      if (emailCheckResult.rows.length > 0) {
         return res.status(400).json({ error: 'Email sudah digunakan pengguna lain' });
       }
     }
@@ -244,17 +243,18 @@ router.put('/users/:id', authenticate, requireAdmin, async (req: AuthRequest, re
     // Build update query dynamically
     const updateFields: string[] = [];
     const updateValues: any[] = [];
+    let paramIndex = 1;
 
     if (name) {
-      updateFields.push('name = ?');
+      updateFields.push(`name = $${paramIndex++}`);
       updateValues.push(name);
     }
     if (email) {
-      updateFields.push('email = ?');
+      updateFields.push(`email = $${paramIndex++}`);
       updateValues.push(email);
     }
     if (role) {
-      updateFields.push('role = ?');
+      updateFields.push(`role = $${paramIndex++}`);
       updateValues.push(role);
     }
     if (password) {
@@ -262,7 +262,7 @@ router.put('/users/:id', authenticate, requireAdmin, async (req: AuthRequest, re
         return res.status(400).json({ error: 'Password minimal 6 karakter' });
       }
       const hashedPassword = await bcrypt.hash(password, 10);
-      updateFields.push('password_hash = ?');
+      updateFields.push(`password_hash = $${paramIndex++}`);
       updateValues.push(hashedPassword);
     }
 
@@ -271,13 +271,12 @@ router.put('/users/:id', authenticate, requireAdmin, async (req: AuthRequest, re
     }
 
     updateValues.push(id);
-    const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
-    const updateStmt = await db.prepare(updateQuery);
-    updateStmt.run(...updateValues);
+    const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramIndex}`;
+    await db.query(updateQuery, updateValues);
 
     // Fetch updated user
-    const userStmt = await db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?');
-    const updatedUser = userStmt.get(id);
+    const userStmt = await db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = $1');
+    const updatedUser = await userStmt.get(id);
 
     res.json({ message: 'Pengguna berhasil diperbarui', user: updatedUser });
   } catch (error) {
@@ -301,16 +300,15 @@ router.delete('/users/:id', authenticate, requireAdmin, async (req: AuthRequest,
     }
 
     // Check if user exists
-    const checkStmt = await db.prepare('SELECT id FROM users WHERE id = ?');
-    const existingUser = checkStmt.get(id);
+    const checkStmt = await db.prepare('SELECT id FROM users WHERE id = $1');
+    const existingUser = await checkStmt.get(id);
 
     if (!existingUser) {
       return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
     }
 
     // Delete user
-    const deleteStmt = await db.prepare('DELETE FROM users WHERE id = ?');
-    deleteStmt.run(id);
+    await db.query('DELETE FROM users WHERE id = $1', [id]);
 
     res.json({ message: 'Pengguna berhasil dihapus' });
   } catch (error) {

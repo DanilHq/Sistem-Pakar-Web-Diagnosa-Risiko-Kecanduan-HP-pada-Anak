@@ -13,6 +13,7 @@ import {
   Shield,
   TrendingUp,
   Info,
+  History,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -152,6 +153,16 @@ export default function AdminDashboard() {
                 <div>
                   <h3 className="font-semibold text-gray-900">Kelola Tentang</h3>
                   <p className="text-sm text-gray-600">Edit halaman tentang</p>
+                </div>
+              </div>
+            </Link>
+
+            <Link to="/admin/history" className="card hover:shadow-lg transition">
+              <div className="flex items-center space-x-3">
+                <History className="w-8 h-8 text-indigo-600" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">Kelola Riwayat</h3>
+                  <p className="text-sm text-gray-600">Lihat riwayat diagnosa</p>
                 </div>
               </div>
             </Link>

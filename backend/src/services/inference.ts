@@ -25,7 +25,7 @@ export interface InferenceResult {
 export async function runInference(selectedSymptoms: string[]): Promise<InferenceResult> {
   // Load all active rules, sorted by priority (ascending, where 1 is highest)
   const stmt = await db.prepare('SELECT * FROM rules WHERE active = 1 ORDER BY priority ASC');
-  const rules = stmt.all() as any[];
+  const rules = await stmt.all() as any[];
 
   const trace: RuleTrace[] = [];
   let matchedRule: any | null = null;
@@ -60,8 +60,8 @@ export async function runInference(selectedSymptoms: string[]): Promise<Inferenc
   const recommendation = matchedRule ? matchedRule.recommendation : 'Pertahankan pola penggunaan HP yang sehat.';
 
   // Get category information
-  const stmt2 = await db.prepare('SELECT * FROM categories WHERE code = ?');
-  const category = stmt2.get(resultCode) as Category | undefined;
+  const stmt2 = await db.prepare('SELECT * FROM categories WHERE code = $1');
+  const category = await stmt2.get(resultCode) as Category | undefined;
 
   return {
     result_code: resultCode,
@@ -81,35 +81,36 @@ export async function saveDiagnosis(
   selectedSymptoms: string[],
   inferenceResult: InferenceResult
 ): Promise<number> {
-  const stmt = await db.prepare(`
-    INSERT INTO diagnoses (user_id, selected_symptoms, result, matched_rule_code, trace)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-
-  const result = stmt.run(
-    userId,
-    JSON.stringify(selectedSymptoms),
-    inferenceResult.result_code,
-    inferenceResult.matched_rule_code,
-    JSON.stringify(inferenceResult.trace)
+  const result = await db.query(
+    `INSERT INTO diagnoses (user_id, selected_symptoms, result, matched_rule_code, trace)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING id`,
+    [
+      userId,
+      JSON.stringify(selectedSymptoms),
+      inferenceResult.result_code,
+      inferenceResult.matched_rule_code,
+      JSON.stringify(inferenceResult.trace)
+    ]
   );
 
-  return result.lastInsertRowid as number;
+  return result.rows[0].id as number;
 }
 
 /**
  * Get diagnosis history for a user
  */
 export async function getDiagnosisHistory(userId: number, limit: number = 10) {
-  const stmt = await db.prepare(`
-      SELECT * FROM diagnoses
-      WHERE user_id = ?
-      ORDER BY created_at DESC
-      LIMIT ?
-    `);
-  const diagnoses = stmt.all(userId, limit) as any[];
+  const result = await db.query(
+    `SELECT * FROM diagnoses
+     WHERE user_id = $1
+     ORDER BY created_at DESC
+     LIMIT $2`,
+    [userId, limit]
+  );
+  const diagnoses = result.rows;
 
-  return diagnoses.map((d) => ({
+  return diagnoses.map((d: any) => ({
     ...d,
     selected_symptoms: JSON.parse(d.selected_symptoms),
     trace: JSON.parse(d.trace),
@@ -120,24 +121,24 @@ export async function getDiagnosisHistory(userId: number, limit: number = 10) {
  * Get diagnosis by ID
  */
 export async function getDiagnosisById(id: number, userId?: number) {
-  let query = 'SELECT * FROM diagnoses WHERE id = ?';
+  let query = 'SELECT * FROM diagnoses WHERE id = $1';
   const params: any[] = [id];
 
   if (userId) {
-    query += ' AND user_id = ?';
+    query += ' AND user_id = $2';
     params.push(userId);
   }
 
-  const stmt = await db.prepare(query);
-  const diagnosis = stmt.get(...params) as any;
+  const result = await db.query(query, params);
+  const diagnosis = result.rows[0];
 
   if (!diagnosis) {
     return null;
   }
 
   // Get category information
-  const stmt2 = await db.prepare('SELECT * FROM categories WHERE code = ?');
-  const categoryResult = stmt2.get(diagnosis.result);
+  const stmt2 = await db.prepare('SELECT * FROM categories WHERE code = $1');
+  const categoryResult = await stmt2.get(diagnosis.result);
   const category = categoryResult ? (categoryResult as unknown as Category) : null;
 
   return {

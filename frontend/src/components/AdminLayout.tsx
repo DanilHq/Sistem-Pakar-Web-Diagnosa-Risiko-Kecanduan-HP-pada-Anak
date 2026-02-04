@@ -11,6 +11,7 @@ import {
   X,
   Shield,
   Info,
+  History,
 } from 'lucide-react';
 import { useState } from 'react';
 import Logo from './Logo';
@@ -36,6 +37,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { path: '/admin/rules', icon: FileText, label: 'Kelola Aturan' },
     { path: '/admin/articles', icon: BookOpen, label: 'Kelola Artikel' },
     { path: '/admin/users', icon: Users, label: 'Kelola User' },
+    { path: '/admin/history', icon: History, label: 'Kelola Riwayat' },
     { path: '/admin/about', icon: Info, label: 'Kelola Tentang' },
   ];
 

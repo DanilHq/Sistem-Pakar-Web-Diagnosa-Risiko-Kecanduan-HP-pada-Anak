@@ -11,7 +11,7 @@ const router = Router();
 router.get('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const stmt = await db.prepare('SELECT * FROM rules ORDER BY priority ASC');
-    const rules = stmt.all() as any[];
+    const rules = await stmt.all() as any[];
 
     // Parse JSON conditions
     const parsedRules = rules.map((rule) => ({
@@ -39,8 +39,8 @@ router.get('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
       return res.status(400).json({ error: 'Invalid rule ID' });
     }
 
-    const stmt = await db.prepare('SELECT * FROM rules WHERE id = ?');
-    const rule = stmt.get(id) as any;
+    const stmt = await db.prepare('SELECT * FROM rules WHERE id = $1');
+    const rule = await stmt.get(id) as any;
 
     if (!rule) {
       return res.status(404).json({ error: 'Rule not found' });
@@ -74,23 +74,23 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
       return res.status(400).json({ error: 'Conditions must be an array' });
     }
 
-    const stmt = await db.prepare(`
-      INSERT INTO rules (code, conditions, result, priority, description, recommendation, active)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const result_db = stmt.run(
-      code,
-      JSON.stringify(conditions),
-      result,
-      priority,
-      description,
-      recommendation,
-      active !== false ? 1 : 0
+    const queryResult = await db.query(
+      `INSERT INTO rules (code, conditions, result, priority, description, recommendation, active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id`,
+      [
+        code,
+        JSON.stringify(conditions),
+        result,
+        priority,
+        description,
+        recommendation,
+        active !== false ? 1 : 0
+      ]
     );
 
     res.status(201).json({
-      id: result_db.lastInsertRowid,
+      id: queryResult.rows[0].id,
       code,
       conditions,
       result,
@@ -102,7 +102,7 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
     });
   } catch (error: any) {
     console.error('Create rule error:', error);
-    if (error.message.includes('UNIQUE constraint failed')) {
+    if (error.code === '23505') { // PostgreSQL unique violation
       return res.status(400).json({ error: 'Rule code already exists' });
     }
     res.status(500).json({ error: 'Internal server error' });
@@ -126,31 +126,30 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
       return res.status(400).json({ error: 'Conditions must be an array' });
     }
 
-    const stmt = await db.prepare(`
-      UPDATE rules
-      SET code = ?, conditions = ?, result = ?, priority = ?, description = ?, recommendation = ?, active = ?
-      WHERE id = ?
-    `);
-
-    const result_db = stmt.run(
-      code,
-      JSON.stringify(conditions),
-      result,
-      priority,
-      description,
-      recommendation,
-      active !== false ? 1 : 0,
-      id
+    const queryResult = await db.query(
+      `UPDATE rules
+       SET code = $1, conditions = $2, result = $3, priority = $4, description = $5, recommendation = $6, active = $7
+       WHERE id = $8`,
+      [
+        code,
+        JSON.stringify(conditions),
+        result,
+        priority,
+        description,
+        recommendation,
+        active !== false ? 1 : 0,
+        id
+      ]
     );
 
-    if (result_db.changes === 0) {
+    if (queryResult.rowCount === 0) {
       return res.status(404).json({ error: 'Rule not found' });
     }
 
     res.json({ message: 'Rule updated successfully' });
   } catch (error: any) {
     console.error('Update rule error:', error);
-    if (error.message.includes('UNIQUE constraint failed')) {
+    if (error.code === '23505') { // PostgreSQL unique violation
       return res.status(400).json({ error: 'Rule code already exists' });
     }
     res.status(500).json({ error: 'Internal server error' });
@@ -169,10 +168,9 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: 
       return res.status(400).json({ error: 'Invalid rule ID' });
     }
 
-    const stmt = await db.prepare('DELETE FROM rules WHERE id = ?');
-    const result = stmt.run(id);
+    const result = await db.query('DELETE FROM rules WHERE id = $1', [id]);
 
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Rule not found' });
     }
 

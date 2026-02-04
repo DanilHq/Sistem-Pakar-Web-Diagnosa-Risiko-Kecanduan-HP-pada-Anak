@@ -16,7 +16,7 @@ router.get('/', async (req, res: Response) => {
         WHERE published = 1
         ORDER BY created_at DESC
       `);
-    const articles = stmt.all();
+    const articles = await stmt.all();
 
     res.json({ articles });
   } catch (error) {
@@ -32,7 +32,7 @@ router.get('/', async (req, res: Response) => {
 router.get('/all', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const stmt = await db.prepare('SELECT * FROM articles ORDER BY created_at DESC');
-    const articles = stmt.all();
+    const articles = await stmt.all();
 
     res.json({ articles });
   } catch (error) {
@@ -49,8 +49,8 @@ router.get('/:slug', async (req, res: Response) => {
   try {
     const { slug } = req.params;
 
-    const stmt = await db.prepare('SELECT * FROM articles WHERE slug = ? AND published = 1');
-    const article = stmt.get(slug);
+    const stmt = await db.prepare('SELECT * FROM articles WHERE slug = $1 AND published = 1');
+    const article = await stmt.get(slug);
 
     if (!article) {
       return res.status(404).json({ error: 'Article not found' });
@@ -75,28 +75,28 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const stmt = await db.prepare(`
-      INSERT INTO articles (title, slug, excerpt, content, category, author, published)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const result = stmt.run(
-      title,
-      slug,
-      excerpt,
-      content,
-      category,
-      author,
-      published !== false ? 1 : 0
+    const result = await db.query(
+      `INSERT INTO articles (title, slug, excerpt, content, category, author, published)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id`,
+      [
+        title,
+        slug,
+        excerpt,
+        content,
+        category,
+        author,
+        published !== false ? 1 : 0
+      ]
     );
 
     res.status(201).json({
-      id: result.lastInsertRowid,
+      id: result.rows[0].id,
       message: 'Article created successfully',
     });
   } catch (error: any) {
     console.error('Create article error:', error);
-    if (error.message.includes('UNIQUE constraint failed')) {
+    if (error.code === '23505') { // PostgreSQL unique violation
       return res.status(400).json({ error: 'Article slug already exists' });
     }
     res.status(500).json({ error: 'Internal server error' });
@@ -116,31 +116,30 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
       return res.status(400).json({ error: 'Invalid article ID' });
     }
 
-    const stmt = await db.prepare(`
-      UPDATE articles
-      SET title = ?, slug = ?, excerpt = ?, content = ?, category = ?, author = ?, published = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `);
-
-    const result = stmt.run(
-      title,
-      slug,
-      excerpt,
-      content,
-      category,
-      author,
-      published !== false ? 1 : 0,
-      id
+    const result = await db.query(
+      `UPDATE articles
+       SET title = $1, slug = $2, excerpt = $3, content = $4, category = $5, author = $6, published = $7, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $8`,
+      [
+        title,
+        slug,
+        excerpt,
+        content,
+        category,
+        author,
+        published !== false ? 1 : 0,
+        id
+      ]
     );
 
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Article not found' });
     }
 
     res.json({ message: 'Article updated successfully' });
   } catch (error: any) {
     console.error('Update article error:', error);
-    if (error.message.includes('UNIQUE constraint failed')) {
+    if (error.code === '23505') { // PostgreSQL unique violation
       return res.status(400).json({ error: 'Article slug already exists' });
     }
     res.status(500).json({ error: 'Internal server error' });
@@ -159,10 +158,9 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: 
       return res.status(400).json({ error: 'Invalid article ID' });
     }
 
-    const stmt = await db.prepare('DELETE FROM articles WHERE id = ?');
-    const result = stmt.run(id);
+    const result = await db.query('DELETE FROM articles WHERE id = $1', [id]);
 
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Article not found' });
     }
 

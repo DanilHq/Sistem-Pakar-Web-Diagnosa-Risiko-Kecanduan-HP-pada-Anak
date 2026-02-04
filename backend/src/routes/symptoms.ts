@@ -11,7 +11,7 @@ const router = Router();
 router.get('/', async (req, res: Response) => {
   try {
     const stmt = await db.prepare('SELECT id, code, text, help_text FROM symptoms WHERE active = 1 ORDER BY code');
-    const symptoms = stmt.all();
+    const symptoms = await stmt.all();
 
     res.json({ symptoms });
   } catch (error) {
@@ -27,7 +27,7 @@ router.get('/', async (req, res: Response) => {
 router.get('/all', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const stmt = await db.prepare('SELECT * FROM symptoms ORDER BY code');
-    const symptoms = stmt.all();
+    const symptoms = await stmt.all();
 
     res.json({ symptoms });
   } catch (error) {
@@ -48,15 +48,15 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
       return res.status(400).json({ error: 'Code and text are required' });
     }
 
-    const stmt = await db.prepare(`
-      INSERT INTO symptoms (code, text, help_text, active)
-      VALUES (?, ?, ?, ?)
-    `);
-
-    const result = stmt.run(code, text, help_text || null, active !== false ? 1 : 0);
+    const result = await db.query(
+      `INSERT INTO symptoms (code, text, help_text, active)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id`,
+      [code, text, help_text || null, active !== false ? 1 : 0]
+    );
 
     res.status(201).json({
-      id: result.lastInsertRowid,
+      id: result.rows[0].id,
       code,
       text,
       help_text,
@@ -65,7 +65,7 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
     });
   } catch (error: any) {
     console.error('Create symptom error:', error);
-    if (error.message.includes('UNIQUE constraint failed')) {
+    if (error.code === '23505') { // PostgreSQL unique violation
       return res.status(400).json({ error: 'Symptom code already exists' });
     }
     res.status(500).json({ error: 'Internal server error' });
@@ -85,28 +85,21 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
       return res.status(400).json({ error: 'Invalid symptom ID' });
     }
 
-    const stmt = await db.prepare(`
-      UPDATE symptoms
-      SET code = ?, text = ?, help_text = ?, active = ?
-      WHERE id = ?
-    `);
-
-    const result = stmt.run(
-      code,
-      text,
-      help_text || null,
-      active !== false ? 1 : 0,
-      id
+    const result = await db.query(
+      `UPDATE symptoms
+       SET code = $1, text = $2, help_text = $3, active = $4
+       WHERE id = $5`,
+      [code, text, help_text || null, active !== false ? 1 : 0, id]
     );
 
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Symptom not found' });
     }
 
     res.json({ message: 'Symptom updated successfully' });
   } catch (error: any) {
     console.error('Update symptom error:', error);
-    if (error.message.includes('UNIQUE constraint failed')) {
+    if (error.code === '23505') { // PostgreSQL unique violation
       return res.status(400).json({ error: 'Symptom code already exists' });
     }
     res.status(500).json({ error: 'Internal server error' });
@@ -125,10 +118,9 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: 
       return res.status(400).json({ error: 'Invalid symptom ID' });
     }
 
-    const stmt = await db.prepare('DELETE FROM symptoms WHERE id = ?');
-    const result = stmt.run(id);
+    const result = await db.query('DELETE FROM symptoms WHERE id = $1', [id]);
 
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Symptom not found' });
     }
 

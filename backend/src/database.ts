@@ -1,178 +1,85 @@
-import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
-import * as fs from 'fs';
-import * as path from 'path';
+import { Pool, PoolClient, QueryResult } from 'pg';
+import * as dotenv from 'dotenv';
 
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '../database.db');
+dotenv.config();
 
-let db: SqlJsDatabase | null = null;
-let initPromise: Promise<void> | null = null;
+// PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  // Or use individual params:
+  // host: process.env.DB_HOST || 'localhost',
+  // port: parseInt(process.env.DB_PORT || '5432'),
+  // database: process.env.DB_NAME || 'diagnosa_hp',
+  // user: process.env.DB_USER || 'postgres',
+  // password: process.env.DB_PASSWORD || 'postgres',
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
-// Initialize database
-async function initDatabase() {
-  if (db) return;
+// Test connection on startup
+pool.on('connect', () => {
+  console.log('Connected to PostgreSQL database');
+});
 
-  const SQL = await initSqlJs();
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
 
-  try {
-    // Try to load existing database
-    const buffer = fs.readFileSync(dbPath);
-    db = new SQL.Database(buffer);
-  } catch (e) {
-    // Create new database if doesn't exist
-    db = new SQL.Database();
-  }
-
-  // Enable foreign keys
-  db.run('PRAGMA foreign_keys = ON');
+// Helper to convert ? placeholders to $1, $2, etc.
+function convertPlaceholders(sql: string): string {
+  let index = 0;
+  return sql.replace(/\?/g, () => `$${++index}`);
 }
 
-// Get init promise (singleton pattern)
-function ensureInit() {
-  if (!initPromise) {
-    initPromise = initDatabase();
-  }
-  return initPromise;
-}
-
-// Save database to file
-export function saveDatabase() {
-  if (db) {
-    const data = db.export();
-    const buffer = Buffer.from(data);
-    fs.writeFileSync(dbPath, buffer);
-  }
-}
-
-// Wrapper class to mimic better-sqlite3 API
+// Wrapper class to maintain similar API to the original sql.js implementation
 class DatabaseWrapper {
   async prepare(sql: string) {
-    await ensureInit();
-    if (!db) throw new Error('Database not initialized');
+    const pgSql = convertPlaceholders(sql);
 
     return {
-      run: (...params: any[]) => {
-        if (!db) throw new Error('Database not initialized');
+      run: async (...params: any[]) => {
         try {
-          db.run(sql, params);
-
-          // Get changes BEFORE saveDatabase() - must be immediate after run()
-          const changes = this.getChangesCount();
-          const lastId = this.getLastInsertId();
-
-          saveDatabase();
-
+          const result = await pool.query(pgSql, params);
           return {
-            changes: changes,
-            lastInsertRowid: lastId
+            changes: result.rowCount || 0,
+            lastInsertRowid: result.rows[0]?.id || 0,
           };
         } catch (error) {
           console.error('SQL Error:', error);
           throw error;
         }
       },
-      get: (...params: any[]) => {
-        if (!db) throw new Error('Database not initialized');
+      get: async (...params: any[]) => {
         try {
-          const stmt = db.prepare(sql);
-          stmt.bind(params);
-          if (stmt.step()) {
-            const result = stmt.getAsObject();
-            stmt.free();
-            return result;
-          }
-          stmt.free();
-          return undefined;
+          const result = await pool.query(pgSql, params);
+          return result.rows[0] || undefined;
         } catch (error) {
           console.error('SQL Error:', error);
           throw error;
         }
       },
-      all: (...params: any[]) => {
-        if (!db) throw new Error('Database not initialized');
+      all: async (...params: any[]) => {
         try {
-          const results: any[] = [];
-          const stmt = db.prepare(sql);
-          stmt.bind(params);
-          while (stmt.step()) {
-            results.push(stmt.getAsObject());
-          }
-          stmt.free();
-          return results;
+          const result = await pool.query(pgSql, params);
+          return result.rows;
         } catch (error) {
           console.error('SQL Error:', error);
           throw error;
         }
-      }
+      },
     };
   }
 
+  // Synchronous version (uses the same async implementation)
   prepare_sync(sql: string) {
-    if (!db) throw new Error('Database not initialized');
-
-    return {
-      run: (...params: any[]) => {
-        if (!db) throw new Error('Database not initialized');
-        try {
-          db.run(sql, params);
-
-          // Get changes BEFORE saveDatabase() - must be immediate after run()
-          const changes = this.getChangesCount();
-          const lastId = this.getLastInsertId();
-
-          saveDatabase();
-
-          return {
-            changes: changes,
-            lastInsertRowid: lastId
-          };
-        } catch (error) {
-          console.error('SQL Error:', error);
-          throw error;
-        }
-      },
-      get: (...params: any[]) => {
-        if (!db) throw new Error('Database not initialized');
-        try {
-          const stmt = db.prepare(sql);
-          stmt.bind(params);
-          if (stmt.step()) {
-            const result = stmt.getAsObject();
-            stmt.free();
-            return result;
-          }
-          stmt.free();
-          return undefined;
-        } catch (error) {
-          console.error('SQL Error:', error);
-          throw error;
-        }
-      },
-      all: (...params: any[]) => {
-        if (!db) throw new Error('Database not initialized');
-        try {
-          const results: any[] = [];
-          const stmt = db.prepare(sql);
-          stmt.bind(params);
-          while (stmt.step()) {
-            results.push(stmt.getAsObject());
-          }
-          stmt.free();
-          return results;
-        } catch (error) {
-          console.error('SQL Error:', error);
-          throw error;
-        }
-      }
-    };
+    return this.prepare(sql);
   }
 
   async exec(sql: string) {
-    await ensureInit();
-    if (!db) throw new Error('Database not initialized');
-
     try {
-      db.run(sql);
-      saveDatabase();
+      await pool.query(sql);
     } catch (error) {
       console.error('SQL Error:', error);
       throw error;
@@ -180,55 +87,59 @@ class DatabaseWrapper {
   }
 
   exec_sync(sql: string) {
-    if (!db) throw new Error('Database not initialized');
+    return this.exec(sql);
+  }
 
+  async pragma(_pragma: string) {
+    // PostgreSQL doesn't use PRAGMA, this is a no-op for compatibility
+    // You might want to handle specific pragmas differently
+  }
+
+  async init() {
+    // Test the connection
     try {
-      db.run(sql);
-      saveDatabase();
+      const client = await pool.connect();
+      console.log('Database connection initialized');
+      client.release();
     } catch (error) {
-      console.error('SQL Error:', error);
+      console.error('Failed to initialize database connection:', error);
       throw error;
     }
   }
 
-  async pragma(pragma: string) {
-    await ensureInit();
-    if (!db) throw new Error('Database not initialized');
-    db.run(`PRAGMA ${pragma}`);
+  // Direct query method for more complex queries
+  async query(sql: string, params?: any[]): Promise<QueryResult> {
+    const pgSql = convertPlaceholders(sql);
+    return pool.query(pgSql, params);
   }
 
-  private getLastInsertId() {
-    if (!db) return 0;
-    const result = db.exec('SELECT last_insert_rowid() as id');
-    if (result[0] && result[0].values[0]) {
-      return result[0].values[0][0] as number;
-    }
-    return 0;
+  // Get a client from the pool for transactions
+  async getClient(): Promise<PoolClient> {
+    return pool.connect();
   }
 
-  private getChangesCount() {
-    if (!db) return 0;
-    try {
-      const result = db.exec('SELECT changes() as changes');
-      if (result[0] && result[0].values[0]) {
-        const changes = result[0].values[0][0] as number;
-        console.log('Changes count:', changes);
-        return changes;
-      }
-      console.log('No changes result');
-      return 0;
-    } catch (error) {
-      console.error('Error getting changes count:', error);
-      return 0;
-    }
-  }
-
-  async init() {
-    await ensureInit();
+  // Close all connections
+  async close() {
+    await pool.end();
   }
 }
 
 // Export singleton instance
 const dbWrapper = new DatabaseWrapper();
 export default dbWrapper;
-export { initDatabase, ensureInit };
+
+// Export pool for direct access if needed
+export { pool };
+
+// Export function for compatibility
+export function saveDatabase() {
+  // No-op for PostgreSQL - data is persisted automatically
+}
+
+export async function initDatabase() {
+  await dbWrapper.init();
+}
+
+export async function ensureInit() {
+  await dbWrapper.init();
+}

@@ -11,7 +11,7 @@ const router = Router();
 router.get('/', async (req, res: Response) => {
   try {
     const stmt = await db.prepare('SELECT * FROM about_content WHERE id = 1');
-    const content = stmt.get() as any;
+    const content = await stmt.get() as any;
 
     if (!content) {
       // Return default content if none exists
@@ -56,25 +56,24 @@ router.put('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respon
 
     // Check if about content exists
     const checkStmt = await db.prepare('SELECT id FROM about_content WHERE id = 1');
-    const existing = checkStmt.get();
+    const existing = await checkStmt.get();
 
     if (existing) {
       // Update existing
-      const updateStmt = await db.prepare(`
+      await db.query(`
         UPDATE about_content 
-        SET title = ?, 
-            description = ?, 
-            vision = ?, 
-            mission = ?, 
-            developer_name = ?,
-            developer_info = ?,
-            contact_email = ?,
-            contact_phone = ?,
-            address = ?,
+        SET title = $1, 
+            description = $2, 
+            vision = $3, 
+            mission = $4, 
+            developer_name = $5,
+            developer_info = $6,
+            contact_email = $7,
+            contact_phone = $8,
+            address = $9,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = 1
-      `);
-      updateStmt.run(
+      `, [
         title, 
         description, 
         vision, 
@@ -84,14 +83,13 @@ router.put('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respon
         contact_email,
         contact_phone,
         address
-      );
+      ]);
     } else {
       // Insert new
-      const insertStmt = await db.prepare(`
+      await db.query(`
         INSERT INTO about_content (id, title, description, vision, mission, developer_name, developer_info, contact_email, contact_phone, address)
-        VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-      insertStmt.run(
+        VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `, [
         title, 
         description, 
         vision, 
@@ -101,12 +99,12 @@ router.put('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respon
         contact_email,
         contact_phone,
         address
-      );
+      ]);
     }
 
     // Return updated content
     const stmt = await db.prepare('SELECT * FROM about_content WHERE id = 1');
-    const content = stmt.get();
+    const content = await stmt.get();
 
     res.json({ message: 'Konten berhasil diperbarui', data: content });
   } catch (error) {

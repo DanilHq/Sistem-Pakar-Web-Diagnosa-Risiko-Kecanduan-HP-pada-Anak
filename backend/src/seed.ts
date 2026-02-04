@@ -19,31 +19,40 @@ async function seed() {
 
   console.log('Seed data loaded');
 
-  // Clear existing data
+  // Clear existing data (in correct order due to foreign keys)
   await db.exec('DELETE FROM diagnoses');
   await db.exec('DELETE FROM articles');
   await db.exec('DELETE FROM categories');
   await db.exec('DELETE FROM rules');
   await db.exec('DELETE FROM symptoms');
   await db.exec('DELETE FROM users');
+  await db.exec('DELETE FROM about_content');
 
   console.log('Existing data cleared');
+
+  // Reset sequences (PostgreSQL specific)
+  await db.exec('ALTER SEQUENCE IF EXISTS users_id_seq RESTART WITH 1');
+  await db.exec('ALTER SEQUENCE IF EXISTS symptoms_id_seq RESTART WITH 1');
+  await db.exec('ALTER SEQUENCE IF EXISTS rules_id_seq RESTART WITH 1');
+  await db.exec('ALTER SEQUENCE IF EXISTS categories_id_seq RESTART WITH 1');
+  await db.exec('ALTER SEQUENCE IF EXISTS articles_id_seq RESTART WITH 1');
+  await db.exec('ALTER SEQUENCE IF EXISTS diagnoses_id_seq RESTART WITH 1');
 
   // Insert symptoms
   for (const symptom of seedData.symptoms) {
     const stmt = await db.prepare(
-      'INSERT INTO symptoms (code, text, help_text, active) VALUES (?, ?, ?, ?)'
+      'INSERT INTO symptoms (code, text, help_text, active) VALUES ($1, $2, $3, $4)'
     );
-    stmt.run(symptom.code, symptom.text, symptom.help_text || null, symptom.active ? 1 : 0);
+    await stmt.run(symptom.code, symptom.text, symptom.help_text || null, symptom.active ? 1 : 0);
   }
   console.log(`Inserted ${seedData.symptoms.length} symptoms`);
 
   // Insert rules
   for (const rule of seedData.rules) {
     const stmt = await db.prepare(
-      'INSERT INTO rules (code, conditions, result, priority, description, recommendation, active) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO rules (code, conditions, result, priority, description, recommendation, active) VALUES ($1, $2, $3, $4, $5, $6, $7)'
     );
-    stmt.run(
+    await stmt.run(
       rule.code,
       JSON.stringify(rule.conditions),
       rule.result,
@@ -58,18 +67,18 @@ async function seed() {
   // Insert categories
   for (const category of seedData.categories) {
     const stmt = await db.prepare(
-      'INSERT INTO categories (code, name, level, color, description) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO categories (code, name, level, color, description) VALUES ($1, $2, $3, $4, $5)'
     );
-    stmt.run(category.code, category.name, category.level, category.color, category.description);
+    await stmt.run(category.code, category.name, category.level, category.color, category.description);
   }
   console.log(`Inserted ${seedData.categories.length} categories`);
 
   // Insert articles
   for (const article of seedData.articles) {
     const stmt = await db.prepare(
-      'INSERT INTO articles (title, slug, excerpt, content, category, author, published) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO articles (title, slug, excerpt, content, category, author, published) VALUES ($1, $2, $3, $4, $5, $6, $7)'
     );
-    stmt.run(
+    await stmt.run(
       article.title,
       article.slug,
       article.excerpt,
@@ -87,14 +96,14 @@ async function seed() {
   const adminName = process.env.ADMIN_NAME || 'Administrator';
   const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
 
-  const insertUser = await db.prepare(
-    'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)'
+  const insertUserStmt = await db.prepare(
+    'INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)'
   );
-  insertUser.run(adminName, adminEmail, hashedAdminPassword, 'admin');
+  await insertUserStmt.run(adminName, adminEmail, hashedAdminPassword, 'admin');
   console.log(`Created admin user: ${adminEmail}`);
 
   const userPassword = await bcrypt.hash('User123!', 10);
-  insertUser.run('Sample User', 'user@example.com', userPassword, 'user');
+  await insertUserStmt.run('Sample User', 'user@example.com', userPassword, 'user');
   console.log('Created sample user: user@example.com');
 
   console.log('\nDatabase seeding completed successfully!');

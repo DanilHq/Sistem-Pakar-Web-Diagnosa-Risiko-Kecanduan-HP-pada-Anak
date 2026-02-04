@@ -22,11 +22,15 @@ router.post('/', async (req: Request, res: Response) => {
 
     // Validate that all selected symptoms exist
     if (selected_symptoms.length > 0) {
-      const placeholders = selected_symptoms.map(() => '?').join(',');
-      const stmt = await db.prepare(`SELECT code FROM symptoms WHERE code IN (${placeholders}) AND active = 1`);
-      const validSymptoms = stmt.all(...selected_symptoms) as any[];
+      // Build parameterized query for PostgreSQL
+      const placeholders = selected_symptoms.map((_, i) => `$${i + 1}`).join(',');
+      const result = await db.query(
+        `SELECT code FROM symptoms WHERE code IN (${placeholders}) AND active = 1`,
+        selected_symptoms
+      );
+      const validSymptoms = result.rows;
 
-      const validCodes = validSymptoms.map((s) => s.code);
+      const validCodes = validSymptoms.map((s: any) => s.code);
       const invalidSymptoms = selected_symptoms.filter((s) => !validCodes.includes(s));
 
       if (invalidSymptoms.length > 0) {

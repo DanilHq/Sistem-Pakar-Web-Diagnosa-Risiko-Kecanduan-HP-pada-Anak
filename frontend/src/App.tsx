@@ -27,6 +27,7 @@ import AdminRules from './pages/admin/AdminRules';
 import AdminArticles from './pages/admin/AdminArticles';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminAbout from './pages/admin/AdminAbout';
+import AdminHistory from './pages/admin/AdminHistory';
 
 // Admin Route - Hanya untuk admin
 function AdminRoute({ children }: { children: React.ReactNode }) {
@@ -144,6 +145,14 @@ function App() {
           element={
             <AdminRoute>
               <AdminAbout />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/history"
+          element={
+            <AdminRoute>
+              <AdminHistory />
             </AdminRoute>
           }
         />
