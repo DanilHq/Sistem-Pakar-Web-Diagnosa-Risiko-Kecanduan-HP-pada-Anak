@@ -476,7 +476,7 @@ Berikut adalah panduan untuk menjalankan aplikasi menggunakan Docker Container. 
 2. **Jalankan Docker Compose**
    Buka terminal (PowerShell di Windows atau Terminal di Linux) dan jalankan:
    ```bash
-   docker-compose up --build
+   docker-compose up -d --build
    ```
    *Tunggu beberapa saat hingga proses build image, migrasi database, dan seeding selesai.*
 
